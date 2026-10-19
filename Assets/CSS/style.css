@@ -54,10 +54,16 @@ header.scrolled { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     margin-bottom: 40px; transition: transform 0.2s, box-shadow 0.2s;
 }
 .hero:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+.hero, .card { scroll-margin-top: 90px; }
 .hero-img { width: 100%; height: 100%; object-fit: cover; min-height: 400px; }
 .hero-content { padding: 40px; display: flex; flex-direction: column; justify-content: center; }
 .hero h1 { font-size: 28px; font-weight: 700; margin-bottom: 15px; line-height: 1.35; }
 .hero p.excerpt { font-size: 16px; color: #555; margin-bottom: 20px; }
+
+.story-section { margin-bottom: 40px; }
+.section-heading { margin-bottom: 24px; }
+.section-heading h2 { font-size: 26px; margin-bottom: 6px; }
+.section-heading p { color: #666; }
 
 .grid-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
 .card {
@@ -68,6 +74,7 @@ header.scrolled { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 .card img { width: 100%; height: 220px; object-fit: cover; }
 .card-content { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
 .card-content h2 { font-size: 18px; font-weight: 700; margin-bottom: 12px; line-height: 1.4; }
+.card-excerpt { color: #666; font-size: 14px; margin-bottom: 16px; }
 .meta { margin-top: auto; border-top: 1px solid #eee; padding-top: 12px; font-size: 13px; color: var(--text-muted); font-weight: 500; }
 
 @media (max-width: 992px) {

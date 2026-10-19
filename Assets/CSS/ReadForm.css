@@ -50,6 +50,29 @@
     margin-bottom: 20px; 
 }
 
+.article-media {
+    margin: 28px 0;
+}
+
+.article-media img,
+.article-media video {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.article-media figcaption {
+    margin-top: 8px;
+    color: #777;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.article-media figcaption a {
+    color: var(--genk-red);
+}
+
 @media (max-width: 768px) {
     .article-header h1 { font-size: 26px; }
     .article-content p { font-size: 16px; }
