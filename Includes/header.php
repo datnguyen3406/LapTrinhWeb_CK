@@ -3,6 +3,13 @@
 declare(strict_types=1);
 
 $pageTitle = $pageTitle ?? 'GenK Magazine';
+$headerPreferences = null;
+if (function_exists('current_user') && ($user = current_user()) !== null) {
+    header('Cache-Control: private, no-store');
+    $preferenceQuery = $pdo->prepare('SELECT theme, font_size, note_color FROM user_preferences WHERE user_id = :id');
+    $preferenceQuery->execute(['id' => $user['id']]);
+    $headerPreferences = $preferenceQuery->fetch();
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -13,8 +20,14 @@ $pageTitle = $pageTitle ?? 'GenK Magazine';
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/Assets/CSS/style.css">
     <link rel="stylesheet" href="/Assets/CSS/ReadForm.css">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#d71a21">
+    <link rel="icon" href="/Assets/Images/app-icon.svg" type="image/svg+xml">
+    <meta name="csrf-token" content="<?= escape($_SESSION['csrf_token'] ?? '') ?>">
 </head>
-<body>
+<body<?= $headerPreferences !== false && $headerPreferences !== null
+    ? ' data-theme="' . escape($headerPreferences['theme']) . '" style="--user-font-size:' . (int) $headerPreferences['font_size'] . 'px;--note-color:' . escape($headerPreferences['note_color']) . '"'
+    : '' ?>>
 <header id="main-header">
     <div class="nav-container">
         <a href="/index.php" class="logo">GenK Magazine</a>

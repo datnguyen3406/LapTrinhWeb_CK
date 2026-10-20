@@ -1,0 +1,17 @@
+{
+  "name": "GenK Magazine",
+  "short_name": "GenK",
+  "start_url": "/index.php",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#d71a21",
+  "description": "Tin công nghệ và ghi chú cá nhân",
+  "icons": [
+    {
+      "src": "/Assets/Images/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+Options -Indexes
+
+<FilesMatch "^(composer\.(json|lock)|router\.php|404\.php)$">
+    Require all denied
+</FilesMatch>
+
+RewriteEngine On
+RewriteRule ^(\.git|vendor|Database|Includes|Realtime|bin)(/|$) - [R=404,L]
+RewriteRule ^(composer\.(json|lock)|router\.php|404\.php)$ - [R=404,L]
+RewriteRule ^api/(.*)$ api.php?path=$1 [QSA,L]
