@@ -1,8 +1,6 @@
-const CACHE_NAME = "genk-shell-v3";
+const CACHE_NAME = "genk-shell-v4";
 const SHELL = [
     "/Assets/CSS/style.css",
-    "/Assets/CSS/ReadForm.css",
-    "/Assets/JS/feature.js",
     "/Assets/JS/app.js",
     "/manifest.webmanifest",
     "/Assets/Images/app-icon.svg",

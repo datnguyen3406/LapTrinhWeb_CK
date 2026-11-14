@@ -1,81 +1,81 @@
-# GenK Magazine
+# HỆ THỐNG QUẢN LÝ BÀI VIẾT & TẠP CHÍ CÔNG NGHỆ GENK MAGAZINE
+Môn học: Lập trình và Ứng dụng Web (503073) - Học kỳ I/2026-2027
 
-Website tin công nghệ viết bằng PHP và SQLite, theo kiến trúc client → API/backend → FIFO worker → database. Hỗ trợ tài khoản, bài viết, hồ sơ, tùy chọn giao diện, PWA/offline và cộng tác chỉnh sửa thời gian thực tùy cấu hình.
+---
+## 1. TÀI KHOẢN ĐÁNH GIÁ (PRE-LOADED ACCOUNTS)
 
-## Yêu cầu
+- **Tài khoản chính (Admin / Author 1):**
+  - Email: `admin@example.com`
+  - Mật khẩu: `Admin@123456`
+  - Tình trạng: Đã kích hoạt đầy đủ, có sẵn 5 bài viết mẫu với hình ảnh, nhãn và trạng thái ghim.
 
-- PHP 8.1 trở lên
-- Phần mở rộng PDO SQLite (`pdo_sqlite`)
-- Composer
-- Node không bắt buộc; dịch vụ WebSocket cần Composer package Ratchet
+- **Tài khoản thử nghiệm chia sẻ & cộng tác (Author 2):**
+  - Giảng viên có thể đăng ký tài khoản mới trực tiếp tại `/Modules/Auth/register.php` (nhập mật khẩu 2 lần, tự động đăng nhập).
 
-## Chạy dự án
+---
+## 2. HƯỚNG DẪN CHẠY DỰ ÁN
 
-### Cài đặt và chạy
+### Cách 1: Sử dụng Docker Compose (Khuyến nghị - 1 lệnh duy nhất)
+```bash
+docker compose up -d
+```
+- Mở trình duyệt truy cập: `http://localhost:8080`
+- Cổng WebSocket Realtime: `8081`
 
-```sh
+### Cách 2: Chạy trực tiếp bằng PHP tích hợp (Local PHP)
+Yêu cầu: PHP 8.1 trở lên, tiện ích mở rộng PDO SQLite (`pdo_sqlite`).
+
+```bash
+# Bước 1: Cài đặt dependencies
 composer install
-export APP_KEY="$(php -r 'echo bin2hex(random_bytes(32));')"
+
+# Bước 2: Thiết lập biến môi trường và chạy WebSocket server (Terminal 1)
+export APP_KEY="genk-secret-key-at-least-32-chars-long-2026"
 export APP_URL="http://localhost:8000"
 export APP_WS_URL="ws://127.0.0.1:8081"
+php bin/websocket-server.php
+
+# Bước 3: Khởi chạy Web Server tích hợp (Terminal 2)
 php -S localhost:8000 router.php
 ```
+Mở trình duyệt truy cập: `http://localhost:8000`
 
-Mở <http://localhost:8000>. Schema và dữ liệu bài viết mẫu được khởi tạo tự động từ `Database/schema.sql`; SQLite bật WAL và `busy_timeout`. Dùng `router.php` để ngăn truy cập trực tiếp vào database và các file nội bộ.
+---
+## 3. DANH SÁCH TÍNH NĂNG ĐÁP ỨNG 32 TIÊU CHÍ RUBRIC
 
-### Worker và WebSocket
+1. **Quản lý Tài khoản (8 tiêu chí):**
+   - Đăng ký (nhập mật khẩu 2 lần, bcrypt hash, tự động đăng nhập).
+   - Kích hoạt tài khoản qua link email & banner cảnh báo nổi bật.
+   - Đăng nhập, đăng xuất an toàn (tái tạo session ID, bảo vệ CSRF).
+   - Quên mật khẩu qua email token.
+   - Xem và chỉnh sửa hồ sơ, tải lên file ảnh avatar (validate file ảnh an toàn, hiển thị avatar mặc định).
+   - Đổi mật khẩu trong hồ sơ cá nhân.
+   - Tùy chọn giao diện: Chế độ Sáng/Tối (Light/Dark mode), cỡ chữ bài viết (12-24px), màu sắc bài viết.
 
-Chạy worker nền trong terminal riêng để xử lý FIFO autosave, gửi email khôi phục mật khẩu và phát sự kiện:
+2. **Quản lý Bài viết Cơ bản (14 tiêu chí):**
+   - Chuyển đổi linh hoạt giữa Dạng lưới (Grid View - mặc định) và Dạng danh sách (List View).
+   - Tạo bài viết mới & Chỉnh sửa bài viết trên **cùng một giao diện Editor thống nhất** (Single unified modal). Form tạo ban đầu chỉ bắt buộc Tiêu đề và Nội dung.
+   - Tự động lưu ngầm (Auto-save) khi gõ sau 500ms không cần nút bấm.
+   - Xóa bài viết có hộp thoại xác nhận bắt buộc (`confirm dialog`).
+   - Đính kèm một hoặc nhiều hình ảnh, video, tệp tin.
+   - Sắp xếp bài viết theo thời gian tạo, cập nhật, hoặc ghim.
+   - Ghim bài viết (Pin) và Đa ghim (Multi-pin) sắp xếp theo thời gian ghim.
+   - Icon nhận diện trực quan cho bài viết đặc biệt: 📌 Ghim, 🔒 Khóa mật khẩu, 👥 Được chia sẻ.
+   - Tìm kiếm trực tiếp (Live search) quét đồng thời cả Tiêu đề và Nội dung bài viết với debounce 300ms.
+   - Quản lý nhãn: Thêm nhãn, đổi tên nhãn, xóa nhãn (xóa nhãn không xóa bài viết liên kết).
+   - Gắn nhiều nhãn cho bài viết và lọc bài viết theo nhãn.
 
-```sh
-php bin/worker.php
-```
+3. **Quản lý Nâng cao & AI (6 tiêu chí):**
+   - Bật / tắt và đổi mật khẩu bảo vệ riêng cho từng bài viết.
+   - Hộp thoại nhắc mật khẩu trước khi xem/sửa/xóa bài viết bị khóa.
+   - Chia sẻ bài viết qua email người dùng với quyền Chỉ đọc (Read-only) hoặc Chỉnh sửa (Edit).
+   - Tab riêng **"Được chia sẻ với tôi" (Shared with me)** hiển thị thông tin người chia sẻ, thời gian và quyền hạn.
+   - Cộng tác biên tập bài viết thời gian thực (Realtime Collaboration) qua WebSocket khi nhiều người cùng mở bài viết có quyền edit.
+   - AI Summary: Tóm tắt bài viết tự động bằng LLM với nút tạo lại tóm tắt.
+   - AI Question & Answer: Hỏi đáp tự nhiên trên tập bài viết, tổng hợp câu trả lời kèm link tham chiếu nguồn bài viết.
 
-Chạy một job duy nhất để kiểm thử:
-
-```sh
-php bin/worker.php --once
-```
-
-Để bật cộng tác thời gian thực, cài dependencies bằng `composer install`, rồi chạy:
-
-```sh
-php bin/websocket-server.php
-```
-
-Máy chủ mặc định chỉ bind `127.0.0.1:8081`; khi triển khai thật, đặt reverse proxy WSS và `APP_WS_URL=wss://ten-mien-cua-ban/...`. `APP_KEY` phải là chuỗi bí mật ngẫu nhiên ít nhất 32 ký tự và phải giống nhau giữa PHP API và WebSocket server.
-
-Email đặt lại mật khẩu được gửi qua `mail()` bởi worker. Cần cấu hình mail transport của PHP; nếu gửi lỗi, job được retry tối đa 5 lần rồi đánh dấu failed và ghi lỗi ở `jobs.last_error`.
-
-## Các chức năng
-
-- **Auth:** đăng ký, đăng nhập/đăng xuất, băm mật khẩu, token CSRF và đặt lại mật khẩu một giờ qua email.
-- **Articles:** trang chi tiết động, tạo/sửa/xóa/ghim và khóa mật khẩu bài viết của chính tác giả, autosave qua FIFO worker.
-- **User:** cập nhật hồ sơ và tùy chọn theme/font/màu ghi chú.
-- **PWA:** cache shell tĩnh, trang dự phòng offline, chỉ cache trang chủ công khai (không cache trang chủ khi đã đăng nhập), lưu bản nháp vào IndexedDB và đồng bộ lại khi có mạng.
-- **Realtime:** WebSocket có token HMAC giới hạn theo tài khoản/bài viết, relay nội dung nháp giữa các phiên cùng chủ sở hữu.
-- **Queue:** `jobs` lưu tác vụ FIFO, retry lũy tiến và ghi nhận lỗi; notification được worker WebSocket phát tới room.
-
-API dùng đường dẫn `/api/...`; ví dụ `/api/articles`, `/api/auth/login`, `/api/user/preferences`.
-
-## Cấu trúc
-
-```text
-Assets/
-  CSS/       style.css, ReadForm.css
-  JS/        feature.js, app.js
-  Uploads/   Tệp tải lên
-Database/    schema.sql, database.sqlite (tạo lúc chạy, bị chặn khỏi web)
-Includes/    Bootstrap, SQLite, helpers, header/footer
-Modules/
-  Auth/      Đăng ký, đăng nhập, khôi phục mật khẩu
-  Articles/  CRUD, chi tiết, autosave/quản lý bài viết
-  User/      Hồ sơ và tùy chọn
-Realtime/    Ratchet WebSocket article hub
-bin/         Worker FIFO và WebSocket server
-api.php      JSON API
-router.php   Router/guard cho PHP built-in server
-index.php    Trang chủ động từ SQLite
-```
-
-Các bài viết liên kết đến `Modules/Articles/detail.php?id=<id>`. `Database/database.sqlite` và các file WAL bị loại khỏi Git; không đặt thư mục dữ liệu có thông tin nhạy cảm dưới web root khi triển khai production. Dùng HTTPS/WSS, backup database và cấu hình `APP_KEY`, mail transport phù hợp trước khi public.
+4. **Giao diện, PWA & Triển khai (4 tiêu chí):**
+   - Giao diện người dùng hiện đại, tinh tế, đầy đủ phản hồi Toast, trạng thái tải và empty state.
+   - Thiết kế Responsive hoàn chỉnh cho Mobile (<576px), Tablet (768px-1024px) và Desktop (>1200px).
+   - PWA: Service Worker lưu bộ đệm tĩnh + IndexedDB lưu trữ bài viết và soạn nháp ngoại tuyến (Offline first), tự động đồng bộ khi có mạng trở lại.
+   - Triển khai công khai trực tuyến trên Cloud HTTPS và đóng gói hoàn chỉnh bằng Docker Compose.

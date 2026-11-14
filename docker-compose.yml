@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: genk_magazine_web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "8081:8081"
+    environment:
+      - APP_KEY=genk-secret-key-at-least-32-chars-long-2026
+      - APP_URL=http://localhost:8080
+      - APP_WS_URL=ws://127.0.0.1:8081
+    volumes:
+      - ./Database:/var/www/html/Database
+      - ./Assets/Uploads:/var/www/html/Assets/Uploads
