@@ -1,6 +1,3 @@
-/* ========================================================
-   GENK MAGAZINE - TINH GỌN STYLE VỚI BOOTSTRAP 4
-   ======================================================== */
 :root {
     --genk-red: #d71a21;
     --bg-color: #f8f9fa;
@@ -18,7 +15,6 @@ body {
 
 .max-w-1240 { max-width: 1240px; margin-left: auto; margin-right: auto; }
 
-/* Dark Theme Overrides */
 body[data-theme="dark"] {
     --bg-color: #121417;
     --text-main: #e2e8f0;

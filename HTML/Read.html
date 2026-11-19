@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chi tiết bài báo</title>
+  <link rel="stylesheet" href="../CSS/style.css" />
+</head>
+<body id="page-article-detail">
+  <header id="site-header" class="site-header">
+    <div id="header-inner" class="header-inner">
+      <a href="index.html" id="brand-logo" class="brand-logo">GENK MAGAZINE</a>
+    
+      <!-- Thanh tìm kiếm bài báo -->
+      <form id="header-search-form" class="header-search-form" role="search">
+        <input
+          type="search"
+          id="header-search-input"
+          class="header-search-input"
+          name="q"
+          placeholder="Tìm kiếm bài báo..."
+          aria-label="Tìm kiếm bài báo"
+        />
+        <button type="submit" id="btn-header-search" class="btn-header-search">Tìm</button>
+      </form>
+      <!-- Thanh danh mục bài báo -->
+      <nav id="category-nav" class="category-nav" aria-label="Danh mục bài báo">
+        <ul id="nav-categories" class="nav-categories">
+          <li class="nav-category-item">
+            <a href="#mobile" id="cat-mobile" data-category="mobile">MOBILE</a>
+          </li>
+          <li class="nav-category-item">
+            <a href="#ai" id="cat-ai" data-category="ai">AI</a>
+          </li>
+          <li class="nav-category-item">
+            <a href="#internet" id="cat-internet" data-category="internet">INTERNET</a>
+          </li>
+          <li class="nav-category-item">
+            <a href="#tin-ict" id="cat-tin-ict" data-category="tin-ict">TIN ICT</a>
+          </li>
+          <li class="nav-category-item">
+            <a href="#kham-pha" id="cat-kham-pha" data-category="kham-pha">KHÁM PHÁ</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="main-content">
+    <article id="article-detail-container" class="article-detail-container" data-article-id="">
+      <span id="article-category" class="article-category-badge"></span>
+      <h1 id="article-title" class="article-title"></h1>
+
+      <div id="article-meta" class="article-meta">
+        <span id="article-source" class="article-source"></span>
+        <time id="article-date" class="article-date"></time>
+      </div>
+
+      <div id="article-thumbnail" class="article-thumbnail"></div>
+      <p id="article-summary" class="article-summary"></p>
+      <div id="article-content" class="article-content"></div>
+
+      <div id="article-actions" class="article-actions">
+        <button type="button" id="btn-add-to-folder">Thêm vào thư mục yêu thích</button>
+      </div>
+    </article>
+  </main>
+
+  <script src="../JavaScript/article_detail.js"></script>
+</body>
+</html>

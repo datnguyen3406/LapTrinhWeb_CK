@@ -4,16 +4,96 @@ Môn học: Lập trình và Ứng dụng Web (503073) - Học kỳ I/2026-2027
 ---
 ## 1. TÀI KHOẢN ĐÁNH GIÁ (PRE-LOADED ACCOUNTS)
 
-- **Tài khoản chính (Admin / Author 1):**
+- **Tài khoản Master (quản trị toàn hệ thống):**
   - Email: `admin@example.com`
-  - Mật khẩu: `Admin@123456`
-  - Tình trạng: Đã kích hoạt đầy đủ, có sẵn 5 bài viết mẫu với hình ảnh, nhãn và trạng thái ghim.
+  - Mật khẩu: `1`
+  - Tình trạng: Đã kích hoạt; có thể quản lý tài khoản, phân quyền Reader/Author và quản lý mọi bài viết.
 
-- **Tài khoản thử nghiệm chia sẻ & cộng tác (Author 2):**
-  - Giảng viên có thể đăng ký tài khoản mới trực tiếp tại `/Modules/Auth/register.php` (nhập mật khẩu 2 lần, tự động đăng nhập).
+- **Tài khoản mẫu:**
+  - Author: `author@example.com` / `1`
+  - Reader: `reader@example.com` / `1`
+  - Các mật khẩu `1` chỉ phù hợp cho môi trường demo/local. Hãy đổi mật khẩu trước khi triển khai công khai.
+
+- **Phân quyền tài khoản:**
+  - Đăng ký mới tạo tài khoản Reader; Master có thể nâng lên Author trong trang Quản trị.
+  - Author được đăng bài và quản lý bài viết của mình; Reader chỉ xem bài của mình hoặc bài được chia sẻ.
+  - Master xem, tạo, sửa và xóa mọi bài viết; đồng thời quản lý quyền tài khoản.
 
 ---
-## 2. HƯỚNG DẪN CHẠY DỰ ÁN
+## 2. CẤU TRÚC THƯ MỤC VÀ CHỨC NĂNG
+
+```text
+CK_web/
+├── index.php                    # Bảng tin, danh sách bài viết và editor chính
+├── api.php                      # Các API JSON cho xác thực, người dùng, bài viết...
+├── router.php                   # Điều hướng URL, chuyển /api/* vào api.php
+├── 404.php                      # Trang không tìm thấy
+├── Includes/                    # Thành phần PHP dùng chung
+├── Modules/
+│   ├── Admin/manage.php         # Trang Master phân quyền Reader/Author
+│   ├── Articles/                # Chi tiết bài viết và trang chuyển hướng editor
+│   ├── Auth/                    # Đăng ký, đăng nhập, kích hoạt, khôi phục mật khẩu
+│   └── User/                    # Hồ sơ và tùy chọn người dùng
+├── Database/                    # Schema và SQLite runtime
+├── Assets/
+│   ├── CSS/                     # Giao diện
+│   ├── JS/                      # Tương tác trình duyệt và gọi API
+│   ├── Images/                  # Biểu tượng ứng dụng
+│   └── Uploads/                 # Avatar và tệp đính kèm tải lên
+├── Realtime/                    # Thành phần WebSocket
+├── bin/                         # Lệnh khởi chạy WebSocket server
+├── vendor/                      # Thư viện Composer, không sửa trực tiếp
+├── Dockerfile
+├── docker-compose.yml
+├── composer.json / composer.lock
+├── manifest.webmanifest
+├── service-worker.js
+└── offline.html
+```
+
+### File ở thư mục gốc
+
+| File | Chức năng |
+|---|---|
+| `index.php` | Trang chính sau đăng nhập: tìm/lọc bài viết, nhãn, danh sách và hộp soạn/sửa bài viết thống nhất. |
+| `api.php` | Backend JSON: đăng nhập/đăng ký, hồ sơ, phân quyền Master, nhãn, bài viết, chia sẻ và AI. |
+| `router.php` | Front controller cho PHP built-in server; định tuyến `/api/...`, trang chính và file tĩnh, chặn truy cập thư mục riêng. |
+| `404.php` | Giao diện lỗi khi URL không tồn tại. |
+| `.htaccess` | Cấu hình Apache: rewrite API và chặn truy cập các thư mục/file nội bộ. |
+| `Dockerfile`, `docker-compose.yml` | Build và chạy ứng dụng PHP/Apache cùng WebSocket server bằng Docker. |
+| `composer.json`, `composer.lock` | Khai báo và khóa phiên bản thư viện PHP (Ratchet/WebSocket). |
+| `README.md` | Tài liệu cài đặt, tài khoản mẫu, chức năng và cấu trúc dự án. |
+| `manifest.webmanifest`, `service-worker.js`, `offline.html` | Khai báo PWA, cache giao diện tĩnh và trang dự phòng khi ngoại tuyến. |
+| `503073-FinalProject-V1.docx`, `AD_WebCK.drawio.png` | Tài liệu báo cáo và sơ đồ thiết kế của đồ án. |
+
+### Thành phần PHP và dữ liệu
+
+| Đường dẫn | Chức năng |
+|---|---|
+| `Includes/bootstrap.php` | Nạp kết nối database và hàm dùng chung; khởi tạo session/CSRF cho các trang web. |
+| `Includes/db.php` | Mở SQLite, thiết lập khóa ngoại/WAL, tạo schema và cập nhật cấu trúc database cũ. |
+| `Includes/functions.php` | Escape HTML, phản hồi JSON, kiểm tra HTTP method/CSRF, người dùng hiện tại và quyền truy cập. |
+| `Includes/header.php` | Phần đầu trang, menu theo vai trò và thông tin CSRF cho form/API. |
+| `Includes/footer.php` | Phần cuối trang; nạp thư viện Bootstrap và `Assets/JS/app.js`. |
+| `Database/schema.sql` | Định nghĩa bảng, quan hệ khóa ngoại, tài khoản Master và dữ liệu bài viết mẫu. |
+| `Database/database.sqlite` | Database runtime trên máy; các file `-wal`/`-shm` là file SQLite phát sinh khi chạy. Những file database runtime được `.gitignore` loại khỏi Git. |
+| `Modules/Admin/manage.php` | Trang chỉ Master được truy cập, liệt kê tài khoản và cấp/thu quyền Author. |
+| `Modules/Auth/login.php`, `register.php` | Giao diện đăng nhập và đăng ký. |
+| `Modules/Auth/activate.php`, `reset-password.php` | Kích hoạt tài khoản và yêu cầu/đặt lại mật khẩu. |
+| `Modules/User/profile.php`, `preferences.php` | Cập nhật hồ sơ/avatar/mật khẩu và tùy chọn giao diện. |
+| `Modules/Articles/detail.php` | Trang chi tiết bài viết, nội dung, file đính kèm và thao tác theo quyền. |
+| `Modules/Articles/create.php`, `edit.php` | URL tương thích cũ; chuyển sang editor thống nhất trên `index.php`. |
+| `Realtime/ArticleHub.php` | WebSocket hub xác thực token, phân phòng theo bài và phát nội dung cộng tác. |
+| `bin/websocket-server.php` | Nạp Composer, database và khởi động WebSocket server. |
+| `Assets/JS/app.js` | Xử lý form/API, editor, lưu tự động, chia sẻ, upload, PWA và tương tác giao diện. |
+| `Assets/CSS/style.css`, `Assets/Images/app-icon.svg` | CSS và biểu tượng ứng dụng. |
+| `Assets/Uploads/avatars/`, `Assets/Uploads/attachments/` | File người dùng tải lên; đây là dữ liệu runtime, không phải mã nguồn. |
+| `vendor/` | Mã thư viện bên thứ ba do Composer cài đặt; cập nhật bằng Composer, không chỉnh tay. |
+
+**Luồng xử lý chính:** trình duyệt tải `index.php` và `Assets/JS/app.js`; JavaScript gọi `/api/...`, được `router.php` chuyển tới `api.php`; `Includes/bootstrap.php` nạp `Includes/db.php` và các hàm dùng chung. Cộng tác thời gian thực đi qua `bin/websocket-server.php` và `Realtime/ArticleHub.php`.
+
+---
+## 3. HƯỚNG DẪN CHẠY DỰ ÁN
 
 ### Cách 1: Sử dụng Docker Compose (Khuyến nghị - 1 lệnh duy nhất)
 ```bash
@@ -41,13 +121,14 @@ php -S localhost:8000 router.php
 Mở trình duyệt truy cập: `http://localhost:8000`
 
 ---
-## 3. DANH SÁCH TÍNH NĂNG ĐÁP ỨNG 32 TIÊU CHÍ RUBRIC
+## 4. DANH SÁCH TÍNH NĂNG ĐÁP ỨNG 32 TIÊU CHÍ RUBRIC
 
 1. **Quản lý Tài khoản (8 tiêu chí):**
-   - Đăng ký (nhập mật khẩu 2 lần, bcrypt hash, tự động đăng nhập).
+   - Đăng ký (nhập mật khẩu 2 lần, bcrypt hash, tự động đăng nhập với quyền Reader).
+   - Phân quyền Master / Author / Reader; Master quản lý tài khoản và nội dung toàn website.
    - Kích hoạt tài khoản qua link email & banner cảnh báo nổi bật.
    - Đăng nhập, đăng xuất an toàn (tái tạo session ID, bảo vệ CSRF).
-   - Quên mật khẩu qua email token.
+   - Khôi phục mật khẩu bằng token; môi trường demo hiển thị liên kết đặt lại trực tiếp (chưa cấu hình gửi email).
    - Xem và chỉnh sửa hồ sơ, tải lên file ảnh avatar (validate file ảnh an toàn, hiển thị avatar mặc định).
    - Đổi mật khẩu trong hồ sơ cá nhân.
    - Tùy chọn giao diện: Chế độ Sáng/Tối (Light/Dark mode), cỡ chữ bài viết (12-24px), màu sắc bài viết.

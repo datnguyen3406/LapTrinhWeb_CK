@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lịch sử hoạt động</title>
+  <link rel="stylesheet" href="../../CSS/style.css" />
+</head>
+<body id="page-admin-history">
+  <header id="site-header" class="site-header">
+    <div id="header-inner" class="header-inner">
+      <a href="Dashboard.html" id="brand-logo" class="brand-logo">GENK MAGAZINE</a>
+      <nav id="admin-nav" class="admin-nav">
+        <a href="Article.html" id="link-admin-articles">Thêm Bài báo</a>
+        <a href="SourceNews.html" id="link-admin-sources">Quản lí Bài báo</a>
+        <a href="ManageUser.html" id="link-admin-users">Quản lí tài khoản</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="main-content">
+    <section id="admin-history-section" class="admin-history-section">
+      <h1 id="admin-history-title">Lịch sử hoạt động (Admin Log)</h1>
+
+      <div id="history-filter-bar" class="history-filter-bar">
+        <input type="text" id="history-search-input" placeholder="Tìm theo hành động, đối tượng..." />
+        <select id="history-action-filter">
+          <option value="">Tất cả hành động</option>
+          <option value="create">Thêm mới</option>
+          <option value="update">Chỉnh sửa</option>
+          <option value="delete">Xóa</option>
+          <option value="role">Phân quyền (Role)</option>
+        </select>
+        <input type="date" id="history-date-filter" />
+        <button type="button" id="btn-filter-history">Lọc</button>
+        <button type="button" id="btn-clear-history-log">Xóa lịch sử</button>
+      </div>
+
+      <table id="admin-history-table" class="admin-history-table">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Tài khoản Admin</th>
+            <th>Hành động</th>
+            <th>Đối tượng tác động</th>
+            <th>Chi tiết</th>
+          </tr>
+        </thead>
+        <tbody id="admin-history-tbody" data-source="db-admin-logs"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="../../JavaScript/admin_history.js"></script>
+</body>
+</html>

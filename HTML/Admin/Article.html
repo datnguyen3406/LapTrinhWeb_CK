@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thêm Bài báo</title>
+  <link rel="stylesheet" href="../../CSS/style.css" />
+</head>
+<body id="page-admin-articles">
+  <header id="site-header" class="site-header">
+    <div id="header-inner" class="header-inner">
+      <a href="Dashboard.html" id="brand-logo" class="brand-logo">GENK MAGAZINE</a>
+      <nav id="admin-nav" class="admin-nav">
+        <a href="History.html" id="link-admin-history">Lịch sử hoạt động</a>
+        <a href="SourceNews.html" id="link-admin-sources">Quản lí Bài báo</a>
+        <a href="ManageUser.html" id="link-admin-users">Quản lí tài khoản</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="main-content">
+    <section id="article-editor-section" class="article-editor-section">
+      <h1>Thêm / Chỉnh sửa bài báo</h1>
+
+      <form id="form-admin-article" class="admin-article-form">
+        <input type="hidden" id="admin-article-id" name="article_id" />
+
+        <div class="form-group">
+          <label for="admin-article-title">Tiêu đề bài báo</label>
+          <input type="text" id="admin-article-title" name="title" required />
+        </div>
+
+        <div class="form-group">
+          <label for="admin-article-category">Danh mục</label>
+          <select id="admin-article-category" name="category"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="admin-article-source">Nguồn báo</label>
+          <select id="admin-article-source" name="source"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="admin-article-summary">Mô tả ngắn</label>
+          <textarea id="admin-article-summary" name="summary" rows="2"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="admin-article-content">Nội dung bài báo</label>
+          <textarea id="admin-article-content" name="content" rows="6" required></textarea>
+        </div>
+
+        <button type="submit" id="btn-save-article">Lưu bài báo</button>
+        <button type="button" id="btn-reset-article">Làm mới form</button>
+      </form>
+    </section>
+
+    <hr />
+  </main>
+
+  <script src="../../JavaScript/admin_articles.js"></script>
+</body>
+</html>

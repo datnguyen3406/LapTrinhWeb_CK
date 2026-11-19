@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Không gian Người đọc</title>
+  <link rel="stylesheet" href="../CSS/style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html" id="link-home">Trang chủ</a>
+    <a href="#profile-section" id="link-profile">Hồ sơ</a>
+    <a href="#history-section" id="link-history">Lịch sử đọc</a>
+    <a href="#favorites-section" id="link-favorites">Thư mục yêu thích</a>
+    <a href="#organize-section" id="link-organize">Phân loại bài báo</a>
+    <a href="#appearance-section" id="link-appearance">Cỡ chữ &amp; Giao diện</a>
+    <button type="button" id="btn-logout">Đăng xuất</button>
+  </header>
+
+  <main>
+    <h1>Trang Người đọc</h1>
+
+    <!-- Hồ sơ, đổi mật khẩu & avatar -->
+    <section id="profile-section">
+      <h2>Hồ sơ cá nhân</h2>
+      <form id="form-profile">
+        <label for="profile-name">Tên hiển thị</label>
+        <input type="text" id="profile-name" />
+
+        <label for="profile-avatar">Avatar (URL hoặc file)</label>
+        <input type="text" id="profile-avatar-url" placeholder="Đường dẫn ảnh đại diện..." />
+        <input type="file" id="profile-avatar-file" accept="image/*" />
+
+        <button type="submit" id="btn-save-profile">Lưu hồ sơ</button>
+      </form>
+
+      <form id="form-change-password">
+        <h3>Đổi mật khẩu</h3>
+        <label for="old-password">Mật khẩu hiện tại</label>
+        <input type="password" id="old-password" />
+
+        <label for="new-password">Mật khẩu mới</label>
+        <input type="password" id="new-password" />
+
+        <button type="submit" id="btn-change-password">Đổi mật khẩu</button>
+      </form>
+    </section>
+
+    <hr />
+
+    <!-- Lưu / bỏ lưu bài báo -->
+    <section id="saved-section">
+      <h2>Bài báo đã lưu</h2>
+      <div id="saved-articles-list"></div>
+    </section>
+
+    <hr />
+
+    <!-- Lịch sử đọc -->
+    <section id="history-section">
+      <h2>Lịch sử đọc</h2>
+      <button type="button" id="btn-clear-history">Xóa lịch sử đọc</button>
+      <div id="reading-history-list"></div>
+    </section>
+
+    <hr />
+
+    <!-- Thư mục yêu thích -->
+    <section id="favorites-section">
+      <h2>Thư mục yêu thích</h2>
+      <div id="favorite-folders-list"></div>
+      <div id="favorite-articles-list"></div>
+    </section>
+
+    <hr />
+
+    <!-- Phân loại bài báo cá nhân -->
+    <section id="organize-section">
+      <h2>Phân loại bài báo cá nhân</h2>
+      <input type="text" id="new-category-label" placeholder="Tên nhãn / thư mục phân loại..." />
+      <button type="button" id="btn-create-label">Tạo phân loại</button>
+      <div id="organized-articles-list"></div>
+    </section>
+
+    <hr />
+
+    <!-- Cỡ chữ & giao diện sáng/tối -->
+    <section id="appearance-section">
+      <h2>Cỡ chữ &amp; Giao diện</h2>
+      <button type="button" id="btn-font-decrease">A-</button>
+      <span id="font-size-value">16px</span>
+      <button type="button" id="btn-font-increase">A+</button>
+      <button type="button" id="btn-toggle-theme">Sáng / Tối</button>
+    </section>
+  </main>
+
+  <script src="../JS/reader.js"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GENK MAGAZINE</title>
+  <link rel="stylesheet" href="../CSS/style.css" />
+</head>
+<body id="page-index">
+  <header id="site-header" class="site-header">
+    <div id="header-inner" class="header-inner">
+      <a href="index.html" id="brand-logo" class="brand-logo">GENK MAGAZINE</a>
+    
+      <!-- Thanh tìm kiếm bài báo -->
+      <form id="header-search-form" class="header-search-form" role="search">
+        <input
+          type="search"
+          id="header-search-input"
+          class="header-search-input"
+          name="q"
+          placeholder="Tìm kiếm bài báo..."
+          aria-label="Tìm kiếm bài báo"
+        />
+        <button type="submit" id="btn-header-search" class="btn-header-search">Tìm</button>
+      </form>
+      <!-- Thanh danh mục bài báo -->
+      <nav id="category-nav" class="category-nav" aria-label="Danh mục bài báo">
+        <ul id="nav-categories" class="nav-categories">
+          <li class="nav-category-item">
+            <a href="#mobile" id="cat-mobile" data-category="mobile">MOBILE</a>
+          </li>
+          <li class="nav-category-item">
+            <a href="#ai" id="cat-ai" data-category="ai">AI</a>
+          </li>
+          <li class="nav-category-item">
+            <a href="#internet" id="cat-internet" data-category="internet">INTERNET</a>
+          </li>
+          <li class="nav-category-item">
+            <a href="#tin-ict" id="cat-tin-ict" data-category="tin-ict">TIN ICT</a>
+          </li>
+          <li class="nav-category-item">
+            <a href="#kham-pha" id="cat-kham-pha" data-category="kham-pha">KHÁM PHÁ</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Nội dung chính (dữ liệu bài báo đổ từ database) -->
+  <main id="main-content" class="main-content">
+    <!-- Khung bài nổi bật lớn (đổ 1 bài từ DB) -->
+    <section id="featured-section" class="featured-section" aria-label="Bài viết nổi bật">
+      <div id="featured-article-slot" class="featured-article-slot" data-source="db-featured-article"></div>
+    </section>
+
+    <!-- Khung lưới 3 cột các bài viết tiếp theo (đổ danh sách từ DB) -->
+    <section id="articles-section" class="articles-section" aria-label="Danh sách bài viết">
+      <div id="articles-grid-slot" class="articles-grid-slot" data-source="db-articles-list"></div>
+    </section>
+  </main>
+
+  <script src="../JavaScript/index.js"></script>
+</body>
+</html>

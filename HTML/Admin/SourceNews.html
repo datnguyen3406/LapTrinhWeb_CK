@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản lý bài báo</title>
+  <link rel="stylesheet" href="../../CSS/style.css" />
+</head>
+<body id="page-admin-sources">
+  <header id="site-header" class="site-header">
+    <div id="header-inner" class="header-inner">
+      <a href="Dashboard.html" id="link-admin-dashboard" class="brand-logo">GENK MAGAZINE</a>
+      <nav id="admin-nav" class="admin-nav">
+        <a href="History.html" id="link-admin-history">Lịch sử hoạt động</a>
+        <a href="Article.html" id="link-admin-articles">Thêm Bài báo</a>
+        <a href="ManageUser.html" id="link-admin-users">Quản lí tài khoản</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="main-content">
+    <section id="sources-manage-section" class="sources-manage-section">
+      <h1>Quản lý báo</h1>
+
+      <form id="form-admin-source" class="admin-source-form">
+        <input type="hidden" id="admin-source-id" name="source_id" />
+
+      <div id="sources-search-bar" class="sources-search-bar">
+        <input
+          type="search"
+          id="search-source-input"
+          name="search_source"
+          placeholder="Tìm theo tên báo..."
+        />
+        <select id="filter-source-category" name="filter_category">
+          <option value="">Tất cả danh mục</option>
+          <option value="mobile">MOBILE</option>
+          <option value="ai">AI</option>
+          <option value="internet">INTERNET</option>
+          <option value="tin-ict">TIN ICT</option>
+          <option value="kham-pha">KHÁM PHÁ</option>
+        </select>
+        <button type="button" id="btn-search-source">Tìm kiếm</button>
+        <button type="button" id="btn-reset-source-filter">Đặt lại</button>
+      </div>
+
+      <!-- Khung hiển thị danh sách (đổ dữ liệu từ DB / JS sau) -->
+      <div id="admin-sources-list" class="admin-sources-list" data-source="db-sources"></div>
+    </section>
+  </main>
+
+  <script src="../../JavaScript/admin_sources.js"></script>
+</body>
+</html>
