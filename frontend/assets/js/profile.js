@@ -12,7 +12,7 @@
     const user = await App.auth.requireUser();
     if (!user) return;
     document.getElementById("profile-name").value = user.displayName || "";
-    document.getElementById("profile-email").value = user.email || "";
+    document.getElementById("profile-username").value = user.username || "";
     const avatarUrl = App.safeUrl(user.avatarUrl || "");
     if (avatarUrl) avatar.src = avatarUrl;
   }

@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Không gian Người đọc</title>
-  <link rel="stylesheet" href="../../CSS/style.css" />
+  <link rel="stylesheet" href="../../assets/css/style.css" />
 </head>
 <body>
   <header>
     <a href="../index.html" id="link-home">Trang chủ</a>
     <a href="#profile-section" id="link-profile">Hồ sơ</a>
     <a href="#history-section" id="link-history">Lịch sử đọc</a>
-    <a href="#favorites-section" id="link-favorites">Thư mục yêu thích</a>
+    <a href="Favourite.html" id="link-favorites">Thư mục yêu thích</a>
     <a href="#organize-section" id="link-organize">Phân loại bài báo</a>
     <a href="#appearance-section" id="link-appearance">Cỡ chữ &amp; Giao diện</a>
     <button type="button" id="btn-logout">Đăng xuất</button>
@@ -52,7 +52,7 @@
     <!-- Lưu / bỏ lưu bài báo -->
     <section id="saved-section">
       <h2>Bài báo đã lưu</h2>
-      <div id="saved-articles-list"></div>
+      <div id="favorite-articles-list"></div>
     </section>
 
     <hr />
@@ -69,8 +69,8 @@
     <!-- Thư mục yêu thích -->
     <section id="favorites-section">
       <h2>Thư mục yêu thích</h2>
-      <div id="favorite-folders-list"></div>
-      <div id="favorite-articles-list"></div>
+      <p>Quản lý thư mục và phân loại bài báo yêu thích tại trang riêng.</p>
+      <a href="Favourite.html">Mở thư mục yêu thích</a>
     </section>
 
     <hr />
@@ -95,7 +95,7 @@
     </section>
   </main>
 
-  <script src="../../JavaScript/api.js"></script>
-  <script src="../../JavaScript/reader.js"></script>
+  <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/reader.js"></script>
 </body>
 </html>

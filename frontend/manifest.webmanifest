@@ -2,14 +2,14 @@
   "name": "GENK MAGAZINE",
   "short_name": "GENK",
   "description": "Đọc báo và tin tức công nghệ",
-  "start_url": "/HTML/index.html",
-  "scope": "/",
+  "start_url": "./pages/index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f8f9fa",
   "theme_color": "#d71a21",
   "icons": [
     {
-      "src": "/assets/app-icon.svg",
+      "src": "./assets/images/app-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

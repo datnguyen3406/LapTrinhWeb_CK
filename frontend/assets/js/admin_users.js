@@ -10,7 +10,7 @@
     table.className = "data-table";
     const head = document.createElement("thead");
     const headerRow = document.createElement("tr");
-    for (const label of ["Email", "Tên hiển thị", "Vai trò", "Trạng thái", "Thao tác"]) {
+    for (const label of ["Tên đăng nhập", "Tên hiển thị", "Vai trò", "Trạng thái", "Thao tác"]) {
       const th = document.createElement("th");
       th.textContent = label;
       headerRow.append(th);
@@ -21,7 +21,7 @@
     for (const user of users) {
       const row = document.createElement("tr");
       for (const value of [
-        user.email,
+        user.username,
         user.displayName,
         user.role,
         user.isLocked ? "Đã khóa" : "Hoạt động",
@@ -32,7 +32,7 @@
       }
       const actions = document.createElement("td");
       const role = document.createElement("select");
-      role.setAttribute("aria-label", `Vai trò của ${user.email}`);
+      role.setAttribute("aria-label", `Vai trò của ${user.username}`);
       for (const optionValue of ["reader", "admin"]) {
         const option = document.createElement("option");
         option.value = optionValue;

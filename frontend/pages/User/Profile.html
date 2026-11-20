@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hồ sơ cá nhân</title>
-  <link rel="stylesheet" href="../../CSS/style.css" />
+  <link rel="stylesheet" href="../../assets/css/style.css" />
 </head>
 <body>
   <header>
     <a href="../index.html">Trang chủ</a>
     <a href="Reader.html">Không gian đọc</a>
     <a href="Favourite.html">Yêu thích</a>
-    <a href="Profie.html" class="active">Hồ sơ</a>
+    <a href="Profile.html" class="active">Hồ sơ</a>
     <button type="button" id="btn-logout">Đăng xuất</button>
   </header>
 
@@ -21,7 +21,7 @@
     <div class="profile-layout">
       <section id="profile-info">
         <div class="avatar-box">
-          <img id="avatar-preview" src="../../assets/default-avatar.svg" alt="Avatar" width="140" height="140" />
+          <img id="avatar-preview" src="../../assets/images/default-avatar.svg" alt="Avatar" width="140" height="140" />
         </div>
 
         <form id="form-profile">
@@ -31,8 +31,8 @@
           </div>
 
           <div class="form-group">
-            <label for="profile-email">Email</label>
-            <input type="email" id="profile-email" disabled />
+            <label for="profile-username">Tên đăng nhập</label>
+            <input type="text" id="profile-username" disabled />
           </div>
 
           <div class="form-group">
@@ -55,7 +55,7 @@
     </div>
   </main>
 
-  <script src="../../JavaScript/api.js"></script>
-  <script src="../../JavaScript/profile.js"></script>
+  <script src="../../assets/js/api.js"></script>
+  <script src="../../assets/js/profile.js"></script>
 </body>
 </html>

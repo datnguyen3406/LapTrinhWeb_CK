@@ -50,7 +50,7 @@
       const row = document.createElement("article");
       row.className = "favorite-item";
       const title = document.createElement("a");
-      const url = new URL(App.url("HTML/Read.html"));
+      const url = new URL(App.url("pages/Read.html"));
       url.searchParams.set("id", favorite.article.id);
       title.href = url.href;
       title.textContent = favorite.article.title;

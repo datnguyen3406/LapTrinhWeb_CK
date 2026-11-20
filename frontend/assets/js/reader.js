@@ -15,7 +15,7 @@
     for (const item of items) {
       const article = item.article || item;
       const link = document.createElement("a");
-      const url = new URL(App.url("HTML/Read.html"));
+      const url = new URL(App.url("pages/Read.html"));
       url.searchParams.set("id", article.id);
       link.href = url.href;
       link.textContent = article.title || "Bài báo";

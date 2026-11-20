@@ -1,0 +1,145 @@
+<?php
+declare(strict_types=1);
+
+namespace App\Service;
+
+use App\API\Http\ApiException;
+use App\Database\Environment;
+use App\Database\UsersRepository;
+
+final class AuthService
+{
+    private array $config;
+
+    public function __construct(private readonly UsersRepository $users, string $backendRoot)
+    {
+        $this->config = Environment::load($backendRoot . '/.env');
+    }
+
+    public function register(array $input): array
+    {
+        $username = strtolower(trim((string) ($input['username'] ?? '')));
+        $name = trim((string) ($input['displayName'] ?? ''));
+        $password = (string) ($input['password'] ?? '');
+        $this->validateUsername($username);
+        if ($name === '' || mb_strlen($name) > 100) {
+            throw new ApiException('Tên hiển thị phải từ 1 đến 100 ký tự.', 422, 'VALIDATION_ERROR');
+        }
+        $this->validatePassword($password);
+        if ($this->users->findByUsername($username)) {
+            throw new ApiException('Tên đăng nhập đã được sử dụng.', 409, 'USERNAME_EXISTS');
+        }
+
+        try {
+            $user = $this->users->create($username, $name, password_hash($password, PASSWORD_BCRYPT));
+        } catch (\PDOException $error) {
+            if (str_contains(strtolower($error->getMessage()), 'unique')) {
+                throw new ApiException('Tên đăng nhập đã được sử dụng.', 409, 'USERNAME_EXISTS');
+            }
+            throw $error;
+        }
+
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_session_version'] = (int) $user['session_version'];
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        return [
+            'user' => $this->publicUser($user),
+            'csrfToken' => $_SESSION['csrf_token'],
+        ];
+    }
+
+    public function login(array $input): array
+    {
+        $username = strtolower(trim((string) ($input['username'] ?? '')));
+        $password = (string) ($input['password'] ?? '');
+        $user = $this->users->findByUsername($username);
+        if (!$user || !password_verify($password, $user['password_hash'])) {
+            throw new ApiException('Tên đăng nhập hoặc mật khẩu không chính xác.', 401, 'INVALID_CREDENTIALS');
+        }
+        if ((int) $user['is_locked'] === 1) {
+            throw new ApiException('Tài khoản đã bị khóa.', 403, 'ACCOUNT_LOCKED');
+        }
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_session_version'] = (int) $user['session_version'];
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        return ['user' => $this->publicUser($user), 'csrfToken' => $_SESSION['csrf_token']];
+    }
+
+    public function requestPasswordReset(string $username): array
+    {
+        if (($this->config['APP_ENV'] ?? 'production') !== 'development') {
+            throw new ApiException(
+                'Chức năng cấp mã khôi phục chỉ bật trong môi trường kiểm thử.',
+                503,
+                'RESET_UNAVAILABLE',
+            );
+        }
+        $response = ['message' => 'Nếu tên đăng nhập tồn tại, mã khôi phục sẽ được tạo.'];
+        $user = $this->users->findByUsername(strtolower(trim($username)));
+        if (!$user) {
+            return $response;
+        }
+        $token = bin2hex(random_bytes(16));
+        $this->users->setPasswordResetToken(
+            $user['id'],
+            hash('sha256', $token),
+            gmdate('Y-m-d\TH:i:s\Z', time() + 900),
+        );
+        $response['resetCode'] = $token;
+        return $response;
+    }
+
+    public function confirmPasswordReset(array $input): void
+    {
+        $token = (string) ($input['token'] ?? '');
+        $password = (string) ($input['password'] ?? '');
+        $this->validatePassword($password);
+        $userId = $this->users->consumePasswordResetToken(hash('sha256', $token));
+        if ($userId === null) {
+            throw new ApiException('Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.', 400, 'INVALID_TOKEN');
+        }
+        $this->users->updatePasswordAndInvalidateSessions(
+            $userId,
+            password_hash($password, PASSWORD_BCRYPT),
+        );
+    }
+
+    public function currentUser(array $user): array
+    {
+        return ['user' => $this->publicUser($user)];
+    }
+
+    private function publicUser(array $user): array
+    {
+        return [
+            'id' => $user['id'],
+            'username' => $user['username'],
+            'displayName' => $user['display_name'],
+            'role' => $user['role'],
+            'isActive' => (bool) $user['is_active'],
+            'isLocked' => (bool) $user['is_locked'],
+            'avatarUrl' => $user['avatar_key'] ? '/api/media/' . $user['avatar_key'] : null,
+            'preferences' => $this->users->preferences($user['id']),
+        ];
+    }
+
+    private function validatePassword(string $password): void
+    {
+        if (strlen($password) < 8 || strlen($password) > 200) {
+            throw new ApiException('Mật khẩu phải có ít nhất 8 ký tự.', 422, 'VALIDATION_ERROR');
+        }
+    }
+
+    private function validateUsername(string $username): void
+    {
+        if (!preg_match('/^[a-z0-9_.-]{3,32}$/', $username)) {
+            throw new ApiException(
+                'Tên đăng nhập phải dài 3-32 ký tự và chỉ gồm chữ, số, dấu chấm, gạch dưới hoặc gạch ngang.',
+                422,
+                'VALIDATION_ERROR',
+            );
+        }
+    }
+}

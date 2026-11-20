@@ -1,214 +1,57 @@
-# HỆ THỐNG QUẢN LÝ BÀI VIẾT & TẠP CHÍ CÔNG NGHỆ GENK MAGAZINE
-Môn học: Lập trình và Ứng dụng Web (503073) - Học kỳ I/2026-2027
+# Genk Magazine
 
----
-## 1. TÀI KHOẢN ĐÁNH GIÁ (PRE-LOADED ACCOUNTS)
+Ứng dụng đọc và quản lý bài báo với giao diện HTML/CSS/JavaScript, API và nghiệp vụ PHP, SQLite, MongoDB và hỗ trợ đọc offline bằng PWA. Email không được sử dụng.
 
-- **Tài khoản Master (quản trị toàn hệ thống):**
-  - Email: `admin@example.com`
-  - Mật khẩu: `1`
-  - Tình trạng: Đã kích hoạt; có thể quản lý tài khoản, phân quyền Reader/Author và quản lý mọi bài viết.
+## Chạy ứng dụng
 
-- **Tài khoản mẫu:**
-  - Author: `author@example.com` / `1`
-  - Reader: `reader@example.com` / `1`
-  - Các mật khẩu `1` chỉ phù hợp cho môi trường demo/local. Hãy đổi mật khẩu trước khi triển khai công khai.
-
-- **Phân quyền tài khoản:**
-  - Đăng ký mới tạo tài khoản Reader; Master có thể nâng lên Author trong trang Quản trị.
-  - Author được đăng bài và quản lý bài viết của mình; Reader chỉ xem bài của mình hoặc bài được chia sẻ.
-  - Master xem, tạo, sửa và xóa mọi bài viết; đồng thời quản lý quyền tài khoản.
-
----
-## 2. CẤU TRÚC THƯ MỤC VÀ CHỨC NĂNG
-
-```text
-CK_web/
-├── index.php                    # Bảng tin, danh sách bài viết và editor chính
-├── api.php                      # Các API JSON cho xác thực, người dùng, bài viết...
-├── router.php                   # Điều hướng URL, chuyển /api/* vào api.php
-├── 404.php                      # Trang không tìm thấy
-├── Includes/                    # Thành phần PHP dùng chung
-├── Modules/
-│   ├── Admin/manage.php         # Trang Master phân quyền Reader/Author
-│   ├── Articles/                # Chi tiết bài viết và trang chuyển hướng editor
-│   ├── Auth/                    # Đăng ký, đăng nhập, kích hoạt, khôi phục mật khẩu
-│   └── User/                    # Hồ sơ và tùy chọn người dùng
-├── Database/                    # Schema và SQLite runtime
-├── Assets/
-│   ├── CSS/                     # Giao diện
-│   ├── JS/                      # Tương tác trình duyệt và gọi API
-│   ├── Images/                  # Biểu tượng ứng dụng
-│   └── Uploads/                 # Avatar và tệp đính kèm tải lên
-├── Realtime/                    # Thành phần WebSocket
-├── bin/                         # Lệnh khởi chạy WebSocket server
-├── vendor/                      # Thư viện Composer, không sửa trực tiếp
-├── Dockerfile
-├── docker-compose.yml
-├── composer.json / composer.lock
-├── manifest.webmanifest
-├── service-worker.js
-└── offline.html
-```
-
-### File ở thư mục gốc
-
-| File | Chức năng |
-|---|---|
-| `index.php` | Trang chính sau đăng nhập: tìm/lọc bài viết, nhãn, danh sách và hộp soạn/sửa bài viết thống nhất. |
-| `api.php` | Backend JSON: đăng nhập/đăng ký, hồ sơ, phân quyền Master, nhãn, bài viết, chia sẻ và AI. |
-| `router.php` | Front controller cho PHP built-in server; định tuyến `/api/...`, trang chính và file tĩnh, chặn truy cập thư mục riêng. |
-| `404.php` | Giao diện lỗi khi URL không tồn tại. |
-| `.htaccess` | Cấu hình Apache: rewrite API và chặn truy cập các thư mục/file nội bộ. |
-| `Dockerfile`, `docker-compose.yml` | Build và chạy ứng dụng PHP/Apache cùng WebSocket server bằng Docker. |
-| `composer.json`, `composer.lock` | Khai báo và khóa phiên bản thư viện PHP (Ratchet/WebSocket). |
-| `README.md` | Tài liệu cài đặt, tài khoản mẫu, chức năng và cấu trúc dự án. |
-| `manifest.webmanifest`, `service-worker.js`, `offline.html` | Khai báo PWA, cache giao diện tĩnh và trang dự phòng khi ngoại tuyến. |
-| `503073-FinalProject-V1.docx`, `AD_WebCK.drawio.png` | Tài liệu báo cáo và sơ đồ thiết kế của đồ án. |
-
-### Thành phần PHP và dữ liệu
-
-| Đường dẫn | Chức năng |
-|---|---|
-| `Includes/bootstrap.php` | Nạp kết nối database và hàm dùng chung; khởi tạo session/CSRF cho các trang web. |
-| `Includes/db.php` | Mở SQLite, thiết lập khóa ngoại/WAL, tạo schema và cập nhật cấu trúc database cũ. |
-| `Includes/functions.php` | Escape HTML, phản hồi JSON, kiểm tra HTTP method/CSRF, người dùng hiện tại và quyền truy cập. |
-| `Includes/header.php` | Phần đầu trang, menu theo vai trò và thông tin CSRF cho form/API. |
-| `Includes/footer.php` | Phần cuối trang; nạp thư viện Bootstrap và `Assets/JS/app.js`. |
-| `Database/schema.sql` | Định nghĩa bảng, quan hệ khóa ngoại, tài khoản Master và dữ liệu bài viết mẫu. |
-| `Database/database.sqlite` | Database runtime trên máy; các file `-wal`/`-shm` là file SQLite phát sinh khi chạy. Những file database runtime được `.gitignore` loại khỏi Git. |
-| `Modules/Admin/manage.php` | Trang chỉ Master được truy cập, liệt kê tài khoản và cấp/thu quyền Author. |
-| `Modules/Auth/login.php`, `register.php` | Giao diện đăng nhập và đăng ký. |
-| `Modules/Auth/activate.php`, `reset-password.php` | Kích hoạt tài khoản và yêu cầu/đặt lại mật khẩu. |
-| `Modules/User/profile.php`, `preferences.php` | Cập nhật hồ sơ/avatar/mật khẩu và tùy chọn giao diện. |
-| `Modules/Articles/detail.php` | Trang chi tiết bài viết, nội dung, file đính kèm và thao tác theo quyền. |
-| `Modules/Articles/create.php`, `edit.php` | URL tương thích cũ; chuyển sang editor thống nhất trên `index.php`. |
-| `Realtime/ArticleHub.php` | WebSocket hub xác thực token, phân phòng theo bài và phát nội dung cộng tác. |
-| `bin/websocket-server.php` | Nạp Composer, database và khởi động WebSocket server. |
-| `Assets/JS/app.js` | Xử lý form/API, editor, lưu tự động, chia sẻ, upload, PWA và tương tác giao diện. |
-| `Assets/CSS/style.css`, `Assets/Images/app-icon.svg` | CSS và biểu tượng ứng dụng. |
-| `Assets/Uploads/avatars/`, `Assets/Uploads/attachments/` | File người dùng tải lên; đây là dữ liệu runtime, không phải mã nguồn. |
-| `vendor/` | Mã thư viện bên thứ ba do Composer cài đặt; cập nhật bằng Composer, không chỉnh tay. |
-
-**Luồng xử lý chính:** trình duyệt tải `index.php` và `Assets/JS/app.js`; JavaScript gọi `/api/...`, được `router.php` chuyển tới `api.php`; `Includes/bootstrap.php` nạp `Includes/db.php` và các hàm dùng chung. Cộng tác thời gian thực đi qua `bin/websocket-server.php` và `Realtime/ArticleHub.php`.
-
----
-## 3. HƯỚNG DẪN CHẠY DỰ ÁN
-
-### Cách 1: Sử dụng Docker Compose (Khuyến nghị - 1 lệnh duy nhất)
-```bash
-docker compose up -d
-```
-- Mở trình duyệt truy cập: `http://localhost:8080`
-- Cổng WebSocket Realtime: `8081`
-
-### Cách 2: Chạy trực tiếp bằng PHP tích hợp (Local PHP)
-Yêu cầu: PHP 8.1 trở lên, tiện ích mở rộng PDO SQLite (`pdo_sqlite`).
+Yêu cầu Docker Engine và Docker Compose. Tại thư mục gốc chạy:
 
 ```bash
-# Bước 1: Cài đặt dependencies
-composer install
-
-# Bước 2: Thiết lập biến môi trường và chạy WebSocket server (Terminal 1)
-export APP_KEY="genk-secret-key-at-least-32-chars-long-2026"
-export APP_URL="http://localhost:8000"
-export APP_WS_URL="ws://127.0.0.1:8081"
-php bin/websocket-server.php
-
-# Bước 3: Khởi chạy Web Server tích hợp (Terminal 2)
-php -S localhost:8000 router.php
+docker compose up --build
 ```
-Mở trình duyệt truy cập: `http://localhost:8000`
 
----
-## 4. DANH SÁCH TÍNH NĂNG ĐÁP ỨNG 32 TIÊU CHÍ RUBRIC
+Mở [http://localhost:8000/pages/index.html](http://localhost:8000/pages/index.html). Lần khởi động đầu tiên sẽ tạo cơ sở dữ liệu và một tài khoản admin trong môi trường development:
 
-1. **Quản lý Tài khoản (8 tiêu chí):**
-   - Đăng ký (nhập mật khẩu 2 lần, bcrypt hash, tự động đăng nhập với quyền Reader).
-   - Phân quyền Master / Author / Reader; Master quản lý tài khoản và nội dung toàn website.
-   - Kích hoạt tài khoản qua link email & banner cảnh báo nổi bật.
-   - Đăng nhập, đăng xuất an toàn (tái tạo session ID, bảo vệ CSRF).
-   - Khôi phục mật khẩu bằng token; môi trường demo hiển thị liên kết đặt lại trực tiếp (chưa cấu hình gửi email).
-   - Xem và chỉnh sửa hồ sơ, tải lên file ảnh avatar (validate file ảnh an toàn, hiển thị avatar mặc định).
-   - Đổi mật khẩu trong hồ sơ cá nhân.
-   - Tùy chọn giao diện: Chế độ Sáng/Tối (Light/Dark mode), cỡ chữ bài viết (12-24px), màu sắc bài viết.
-
-2. **Quản lý Bài viết Cơ bản (14 tiêu chí):**
-   - Chuyển đổi linh hoạt giữa Dạng lưới (Grid View - mặc định) và Dạng danh sách (List View).
-   - Tạo bài viết mới & Chỉnh sửa bài viết trên **cùng một giao diện Editor thống nhất** (Single unified modal). Form tạo ban đầu chỉ bắt buộc Tiêu đề và Nội dung.
-   - Tự động lưu ngầm (Auto-save) khi gõ sau 500ms không cần nút bấm.
-   - Xóa bài viết có hộp thoại xác nhận bắt buộc (`confirm dialog`).
-   - Đính kèm một hoặc nhiều hình ảnh, video, tệp tin.
-   - Sắp xếp bài viết theo thời gian tạo, cập nhật, hoặc ghim.
-   - Ghim bài viết (Pin) và Đa ghim (Multi-pin) sắp xếp theo thời gian ghim.
-   - Icon nhận diện trực quan cho bài viết đặc biệt: 📌 Ghim, 🔒 Khóa mật khẩu, 👥 Được chia sẻ.
-   - Tìm kiếm trực tiếp (Live search) quét đồng thời cả Tiêu đề và Nội dung bài viết với debounce 300ms.
-   - Quản lý nhãn: Thêm nhãn, đổi tên nhãn, xóa nhãn (xóa nhãn không xóa bài viết liên kết).
-   - Gắn nhiều nhãn cho bài viết và lọc bài viết theo nhãn.
-
-3. **Quản lý Nâng cao & AI (6 tiêu chí):**
-   - Bật / tắt và đổi mật khẩu bảo vệ riêng cho từng bài viết.
-   - Hộp thoại nhắc mật khẩu trước khi xem/sửa/xóa bài viết bị khóa.
-   - Chia sẻ bài viết qua email người dùng với quyền Chỉ đọc (Read-only) hoặc Chỉnh sửa (Edit).
-   - Tab riêng **"Được chia sẻ với tôi" (Shared with me)** hiển thị thông tin người chia sẻ, thời gian và quyền hạn.
-   - Cộng tác biên tập bài viết thời gian thực (Realtime Collaboration) qua WebSocket khi nhiều người cùng mở bài viết có quyền edit.
-   - AI Summary: Tóm tắt bài viết tự động bằng LLM với nút tạo lại tóm tắt.
-   - AI Question & Answer: Hỏi đáp tự nhiên trên tập bài viết, tổng hợp câu trả lời kèm link tham chiếu nguồn bài viết.
-
-4. **Giao diện, PWA & Triển khai (4 tiêu chí):**
-   - Giao diện người dùng hiện đại, tinh tế, đầy đủ phản hồi Toast, trạng thái tải và empty state.
-   - Thiết kế Responsive hoàn chỉnh cho Mobile (<576px), Tablet (768px-1024px) và Desktop (>1200px).
-   - PWA: Service Worker + Manifest lưu giao diện tĩnh và nội dung bài báo đã mở để đọc ngoại tuyến; thao tác ghi khi offline chưa được đồng bộ.
-   - Triển khai công khai trực tuyến trên Cloud HTTPS và đóng gói hoàn chỉnh bằng Docker Compose.
-
----
-## 5. Hợp đồng API frontend dự kiến cho backend PHP
-
-Các trang HTML gọi API cùng origin dưới tiền tố `/api/`, gửi cookie phiên bằng `credentials: include`. API **chưa được triển khai trong phần frontend hiện tại**. Backend nên trả thành công theo dạng `{ "data": ... }`, lỗi theo dạng `{ "error": { "message": "...", "code": "..." } }`; các thao tác xóa có thể trả `204 No Content`. Nếu dùng CSRF token, backend có thể đưa token vào `<meta name="csrf-token">`; frontend sẽ gửi nó qua header `X-CSRF-Token`.
-
-### Đọc báo
-
-| Method | Endpoint | Dữ liệu chính |
+| Vai trò | Tên đăng nhập | Mật khẩu |
 |---|---|---|
-| `GET` | `/api/articles?q=&category=&source=` | `{ "items": [...], "featured": {...} }` |
-| `GET` | `/api/articles/{id}` | `{ "article": {...} }` |
-| `GET` | `/api/sources` | `{ "items": [...] }` |
-| `GET` | `/api/categories` | `{ "items": [...] }` |
+| Admin | `admin` | `Admin@123456` |
 
-Bài báo dùng các trường `id`, `title`, `summary`, `content`, `thumbnailUrl`, `category`, `source`, `publishedAt`, `isFeatured`, `isFavorite`, `visible`; `category` và `source` có thể là chuỗi tên hoặc object có `id`, `name`, `slug`.
+Đây là thông tin demo, không dùng cho môi trường production. Đăng ký tài khoản mới để tạo Reader; admin có thể đổi vai trò hoặc khóa/mở tài khoản trong trang quản trị. Không có Reader được tạo sẵn.
 
-### Tài khoản và Reader
+Dừng ứng dụng bằng `Ctrl+C`, hoặc chạy nền với `docker compose up --build -d` rồi dừng bằng `docker compose down`. Dữ liệu SQLite, MongoDB và avatar nằm trong Docker volumes; **`docker compose down -v` sẽ xóa toàn bộ dữ liệu**.
 
-| Method | Endpoint | Payload/response |
-|---|---|---|
-| `GET` | `/api/auth/me` | `{ "user": { "id", "email", "displayName", "role", "isActive", "isLocked", "avatarUrl", "preferences" } }`; trả `401` nếu chưa đăng nhập |
-| `POST` | `/api/auth/register` | `{ "email", "displayName", "password" }`; backend tạo session và gửi email kích hoạt |
-| `POST` | `/api/auth/login` | `{ "email", "password" }`; backend xác thực và tạo session |
-| `POST` | `/api/auth/logout` | `{}` |
-| `POST` | `/api/auth/activate` | `{ "token" }` |
-| `POST` | `/api/auth/activation/resend` | `{}` |
-| `POST` | `/api/auth/password-reset/request` | `{ "email" }` |
-| `POST` | `/api/auth/password-reset/confirm` | `{ "token", "password" }`; không tự đăng nhập lại |
-| `PATCH` | `/api/me` | `{ "displayName", "avatarUrl?" }` |
-| `POST` | `/api/me/avatar` | `multipart/form-data`, trường `avatar` |
-| `POST` | `/api/me/password` | `{ "currentPassword", "newPassword" }` |
-| `PATCH` | `/api/me/preferences` | `{ "fontSize?", "theme?" }` |
-| `GET` / `POST` | `/api/me/favorites` | Danh sách `{ "items": [{ "article": {...}, "folderId" }] }` / `{ "articleId", "folderId?" }` |
-| `DELETE` | `/api/me/favorites/{articleId}` | Bỏ yêu thích |
-| `GET` / `POST` | `/api/me/favorite-folders` | `{ "items": [...] }` / `{ "name" }`, tạo trả `{ "folder": {...} }` |
-| `GET` / `POST` / `DELETE` | `/api/me/reading-history` | Danh sách, ghi nhận `{ "articleId" }`, hoặc xóa lịch sử |
-| `POST` | `/api/me/categories` | `{ "name" }` |
+## Kiểm tra chức năng
 
-Email kích hoạt nên đưa người dùng về `/HTML/index.html?activationToken={token}`; email đặt lại mật khẩu nên trỏ tới `/HTML/ForgetPassword.html?token={token}`.
+### Kiểm tra PHP và cấu hình Compose
 
-Frontend chỉ gửi mật khẩu qua HTTPS khi triển khai; **hash mật khẩu, kiểm tra quyền, xác thực dữ liệu, giới hạn upload và bảo vệ session là trách nhiệm của backend PHP**. Backend cần trả lỗi xác thực/quyền phù hợp (`401`, `403`) và thông báo an toàn cho người dùng.
+```bash
+docker compose config -q
+docker compose up -d --build
+docker compose exec -T app sh -lc 'find backend -name "*.php" -print0 | xargs -0 -n1 php -l'
+```
 
-### Quản trị
+### Kiểm tra thủ công
 
-| Method | Endpoint | Mục đích |
-|---|---|---|
-| `GET` | `/api/admin/dashboard` | Thống kê `{ "usersCount", "articlesCount", "visibleArticlesCount" }` |
-| `GET` / `PATCH` | `/api/admin/users`, `/api/admin/users/{id}` | Danh sách; cập nhật `{ "role?", "isLocked?" }` |
-| `GET` / `DELETE` | `/api/admin/activity-logs` | Lọc bằng `q`, `action`, `date`; xóa toàn bộ log |
-| `GET` / `POST` / `PATCH` / `DELETE` | `/api/admin/articles[/{id}]` | Quản lý bài báo; payload gồm title, categoryId, sourceId, summary, content và visible |
-| `GET` / `POST` / `PATCH` / `DELETE` | `/api/admin/sources[/{id}]` | Quản lý nguồn báo; payload gồm name, url, category |
+1. Đăng nhập bằng tài khoản admin ở trên; thử tạo, sửa và ẩn/hiện bài báo.
+2. Đăng ký một tài khoản mới và xác nhận tài khoản đó có vai trò Reader; thử tìm kiếm, lọc và yêu thích bài viết.
+3. Với Reader, yêu cầu mã đặt lại mật khẩu, nhập mã hiển thị trong môi trường development và đặt mật khẩu mới. Mã dùng một lần, hết hạn sau 15 phút; sau khi đổi mật khẩu cần đăng nhập lại.
+4. Kiểm tra hồ sơ, avatar, tùy chọn giao diện/cỡ chữ và thử mở bài đã lưu khi offline.
+5. Mở giao diện ở các kích thước mobile, tablet và desktop; kiểm tra không tràn ngang.
+
+API cùng origin được phục vụ dưới `/api/`. Có thể kiểm tra nhanh danh sách bài viết bằng:
+
+```bash
+curl -i http://localhost:8000/api/articles
+```
+
+## Cấu trúc chính
+
+- `frontend/pages/`, `frontend/assets/`: các trang, giao diện và mã JavaScript gọi API.
+- `frontend/service-worker.js`, `frontend/manifest.webmanifest`, `frontend/offline.html`: hỗ trợ PWA và offline.
+- `backend/API/`: định tuyến và xử lý HTTP.
+- `backend/Service/`: logic nghiệp vụ tài khoản, bài viết và quản trị.
+- `backend/Middleware/`: session, CSRF và kiểm tra quyền.
+- `backend/Database/`: migrations, SQLite, MongoDB và repositories.
+- `backend/store/uploads/`: lưu avatar được upload.
+
+Khi nâng cấp cơ sở dữ liệu cũ, migration giữ lại tài khoản và chuyển chúng sang đăng nhập bằng username; tài khoản cũ chưa có username được gán tên dựa trên role và ID.

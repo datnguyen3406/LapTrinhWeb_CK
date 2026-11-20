@@ -5,19 +5,20 @@
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     message.hidden = true;
-    const email = document.getElementById("login-email").value.trim();
+    const username = document.getElementById("login-username").value.trim();
     const password = document.getElementById("login-password").value;
     App.ui.setBusy(form, true, "Đang đăng nhập...");
     try {
-      const result = await App.api.post("auth/login", { email, password });
+      const result = await App.api.post("auth/login", { username, password });
       if (!result.user) throw new Error("Phản hồi đăng nhập không hợp lệ.");
       const requested = new URLSearchParams(window.location.search).get("next");
-      const next = requested && requested.startsWith("/HTML/") && !requested.startsWith("//")
-        ? requested
+      const pageRoot = new URL("pages/", App.url("")).pathname;
+      const next = requested?.startsWith(pageRoot)
+        ? new URL(requested, App.url("")).href
         : result.user.role === "admin"
-          ? "/HTML/Admin/Dashboard.html"
-          : "/HTML/index.html";
-      window.location.assign(new URL(next, App.url("")).href);
+          ? App.url("pages/Admin/Dashboard.html")
+          : App.url("pages/index.html");
+      window.location.assign(next);
     } catch (error) {
       App.ui.showMessage(message, error.message);
     } finally {

@@ -13,7 +13,7 @@
   const textOf = (value) => typeof value === "string" ? value : value?.name || "";
 
   function articleLink(article) {
-    const url = new URL(App.url("HTML/Read.html"));
+    const url = new URL(App.url("pages/Read.html"));
     url.searchParams.set("id", article.id);
     return url.href;
   }

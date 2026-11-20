@@ -1,0 +1,5 @@
+.git
+.env
+backend/.env
+backend/Database/data/*.sqlite*
+backend/store/uploads/*

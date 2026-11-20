@@ -29,7 +29,7 @@
       for (const log of result.items) {
         const row = document.createElement("tr");
         cell(row, log.createdAt ? new Date(log.createdAt).toLocaleString("vi-VN") : "");
-        cell(row, log.adminEmail);
+        cell(row, log.actorUsername);
         cell(row, log.action);
         cell(row, log.target);
         cell(row, log.details);

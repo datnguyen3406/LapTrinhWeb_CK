@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#d71a21" />
   <title>GENK MAGAZINE</title>
-  <link rel="stylesheet" href="../CSS/style.css" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
   <link rel="manifest" href="../manifest.webmanifest" />
 </head>
 <body id="page-index">
@@ -45,31 +45,41 @@
           </li>
         </ul>
       </nav>
-      <label class="source-filter-label" for="source-filter">Nguồn</label>
       <select id="source-filter" aria-label="Lọc theo nguồn báo">
         <option value="">Tất cả nguồn</option>
       </select>
       <nav id="account-nav" class="account-nav" aria-label="Tài khoản">
-        <a href="Auth.html">Đăng nhập</a>
-        <a href="Regisger.html">Đăng ký</a>
+        <a href="Auth.html" id="btn-login">Đăng nhập</a>
+        <a href="Register.html" id="btn-register">Đăng ký</a>
       </nav>
     </div>
   </header>
 
   <!-- Nội dung chính (dữ liệu bài báo đổ từ database) -->
   <main id="main-content" class="main-content">
+    <section class="home-intro" aria-label="Giới thiệu">
+      <div>
+        <p class="eyebrow">GENK MAGAZINE · CÔNG NGHỆ</p>
+        <h1>Tin mới, góc nhìn mới.</h1>
+        <p>Cập nhật những câu chuyện công nghệ đáng chú ý mỗi ngày.</p>
+      </div>
+      <div class="home-intro-art" aria-hidden="true"></div>
+    </section>
+
     <!-- Khung bài nổi bật lớn (đổ 1 bài từ DB) -->
     <section id="featured-section" class="featured-section" aria-label="Bài viết nổi bật">
+      <h2 class="section-title">Nổi bật hôm nay</h2>
       <div id="featured-article-slot" class="featured-article-slot" data-source="db-featured-article"></div>
     </section>
 
     <!-- Khung lưới 3 cột các bài viết tiếp theo (đổ danh sách từ DB) -->
     <section id="articles-section" class="articles-section" aria-label="Danh sách bài viết">
+      <h2 class="section-title">Bài viết mới nhất</h2>
       <div id="articles-grid-slot" class="articles-grid-slot" data-source="db-articles-list"></div>
     </section>
   </main>
 
-  <script src="../JavaScript/api.js"></script>
-  <script src="../JavaScript/index.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/index.js"></script>
 </body>
 </html>

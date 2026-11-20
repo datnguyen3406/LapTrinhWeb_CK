@@ -1,8 +1,9 @@
 (() => {
   // PHP API responses use { data: ... }; errors use { error: { message, code } }.
   const scriptUrl = document.currentScript.src;
-  const appRoot = new URL("../", scriptUrl);
-  const apiRoot = new URL("api/", appRoot);
+  const appRoot = new URL("../../", scriptUrl);
+  const apiRoot = new URL("../api/", appRoot);
+  let csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
 
   class ApiError extends Error {
     constructor(message, status = 0, code = "") {
@@ -26,8 +27,30 @@
       options.headers["Content-Type"] = "application/json";
       options.body = JSON.stringify(body);
     }
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-    if (csrfToken && method !== "GET") options.headers["X-CSRF-Token"] = csrfToken;
+    if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+      if (!csrfToken) {
+        let csrfResponse;
+        try {
+          csrfResponse = await fetch(new URL("auth/csrf", apiRoot), {
+            credentials: "include",
+            headers: { Accept: "application/json" },
+          });
+        } catch {
+          showOfflineNotice();
+          throw new ApiError("Không thể kết nối máy chủ. Vui lòng thử lại sau.");
+        }
+        const csrfPayload = await csrfResponse.json().catch(() => null);
+        if (!csrfResponse.ok || !csrfPayload?.data?.csrfToken) {
+          throw new ApiError(
+            csrfPayload?.error?.message || "Không thể khởi tạo phiên bảo mật.",
+            csrfResponse.status,
+            csrfPayload?.error?.code || "",
+          );
+        }
+        csrfToken = csrfPayload.data.csrfToken;
+      }
+      options.headers["X-CSRF-Token"] = csrfToken;
+    }
 
     let response;
     try {
@@ -37,7 +60,10 @@
       throw new ApiError("Không thể kết nối máy chủ. Vui lòng thử lại sau.");
     }
 
-    if (response.status === 204) return null;
+    if (response.status === 204) {
+      if (path.split("?")[0] === "auth/logout") clearPrivateOfflineCache();
+      return null;
+    }
 
     let payload;
     try {
@@ -57,7 +83,26 @@
     if (!payload || typeof payload !== "object" || !("data" in payload)) {
       throw new ApiError("Phản hồi máy chủ thiếu trường data.", response.status);
     }
+    if (typeof payload.data?.csrfToken === "string") {
+      csrfToken = payload.data.csrfToken;
+    }
+    if (["auth/login", "auth/register", "auth/logout", "auth/password-reset/confirm"]
+      .includes(path.split("?")[0])) {
+      clearPrivateOfflineCache();
+    }
     return payload.data;
+  }
+
+  function clearPrivateOfflineCache() {
+    if (!("serviceWorker" in navigator)) return;
+    const message = { type: "CLEAR_PRIVATE_CACHE" };
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage(message);
+      return;
+    }
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.active?.postMessage(message);
+    });
   }
 
   function showMessage(element, message, type = "error") {
@@ -140,7 +185,7 @@
 
   function redirectToLogin() {
     const next = `${window.location.pathname}${window.location.search}`;
-    const login = new URL(rootPage("HTML/Auth.html"));
+    const login = new URL(rootPage("pages/Auth.html"));
     login.searchParams.set("next", next);
     window.location.assign(login.href);
   }
@@ -164,80 +209,34 @@
       return null;
     }
 
-    showActivationBanner(user);
     if (role && user.role !== role) {
       toast("Bạn không có quyền truy cập trang này.", "error");
-      window.location.replace(rootPage("HTML/index.html"));
+      window.location.replace(rootPage("pages/index.html"));
       return null;
     }
     return user;
   }
 
-  function showActivationBanner(user) {
-    if (user.isActive !== false) return;
-    let banner = document.getElementById("activation-banner");
-    if (!banner) {
-      banner = document.createElement("aside");
-      banner.id = "activation-banner";
-      banner.className = "activation-banner";
-      document.querySelector("main")?.before(banner);
-    }
-    banner.replaceChildren(document.createTextNode(
-      "Tài khoản chưa kích hoạt. Bạn vẫn có thể đọc báo. ",
-    ));
-    const resend = document.createElement("button");
-    resend.type = "button";
-    resend.textContent = "Gửi lại email kích hoạt";
-    resend.addEventListener("click", async () => {
-      resend.disabled = true;
-      try {
-        await request("auth/activation/resend", { method: "POST", body: {} });
-        toast("Đã gửi lại email kích hoạt.", "success");
-      } catch (error) {
-        toast(error.message, "error");
-      } finally {
-        resend.disabled = false;
-      }
-    });
-    banner.append(resend);
-  }
-
-  async function activateFromUrl() {
-    const url = new URL(window.location.href);
-    const token = url.searchParams.get("activationToken");
-    if (!token) return;
-    url.searchParams.delete("activationToken");
-    window.history.replaceState({}, "", url);
-    try {
-      await request("auth/activate", { method: "POST", body: { token } });
-      toast("Tài khoản đã được kích hoạt.", "success");
-    } catch (error) {
-      toast(error.message, "error");
-    }
-  }
-
   async function initAccountNavigation() {
     const nav = document.getElementById("account-nav");
-    await activateFromUrl();
     if (!nav) return;
     try {
       const user = await currentUser();
       const favorites = document.createElement("a");
-      favorites.href = rootPage("HTML/User/Favourite.html");
+      favorites.href = rootPage("pages/User/Favourite.html");
       favorites.textContent = "Yêu thích";
       const reader = document.createElement("a");
-      reader.href = rootPage("HTML/User/Reader.html");
+      reader.href = rootPage("pages/User/Reader.html");
       reader.textContent = "Không gian đọc";
       const profile = document.createElement("a");
-      profile.href = rootPage("HTML/User/Profie.html");
-      profile.textContent = user.displayName || user.email;
+      profile.href = rootPage("pages/User/Profile.html");
+      profile.textContent = user.displayName || user.username;
       const logout = document.createElement("button");
       logout.type = "button";
       logout.id = "btn-logout";
       logout.textContent = "Đăng xuất";
       nav.replaceChildren(favorites, reader, profile, logout);
 
-      showActivationBanner(user);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) return;
       if (error instanceof ApiError && error.status === 0) {
@@ -254,7 +253,7 @@
     button.disabled = true;
     try {
       await request("auth/logout", { method: "POST", body: {} });
-      window.location.assign(rootPage("HTML/index.html"));
+      window.location.assign(rootPage("pages/index.html"));
     } catch (error) {
       toast(error.message, "error");
       button.disabled = false;
@@ -265,16 +264,16 @@
     if (event.defaultPrevented || event.target.id !== "header-search-form") return;
     event.preventDefault();
     const query = document.getElementById("header-search-input").value.trim();
-    const target = new URL(rootPage("HTML/index.html"));
+    const target = new URL(rootPage("pages/index.html"));
     if (query) target.searchParams.set("q", query);
     window.location.assign(target.href);
   });
 
   document.addEventListener("click", (event) => {
-    if (!window.location.pathname.endsWith("/HTML/Read.html")) return;
+    if (!window.location.pathname.endsWith("/pages/Read.html")) return;
     const button = event.target.closest("#category-nav [data-category]");
     if (!button) return;
-    const target = new URL(rootPage("HTML/index.html"));
+    const target = new URL(rootPage("pages/index.html"));
     target.searchParams.set("category", button.dataset.category);
     window.location.assign(target.href);
   });
@@ -287,7 +286,7 @@
       delete: (path) => request(path, { method: "DELETE" }),
       upload: (path, formData) => request(path, { method: "POST", body: formData }),
     },
-    auth: { currentUser, requireUser, redirectToLogin, showActivationBanner },
+    auth: { currentUser, requireUser, redirectToLogin },
     ui: { showMessage, setBusy, renderState, toast, showOfflineNotice, initAccountNavigation },
     url: rootPage,
     safeUrl,

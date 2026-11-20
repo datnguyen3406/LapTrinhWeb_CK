@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >-
+      sh -c "php backend/Database/scripts/setup.php &&
+      php backend/Database/scripts/seed-demo.php &&
+      exec php -S 0.0.0.0:8000 -t . backend/router.php"
+    environment:
+      APP_ENV: development
+      APP_URL: http://localhost:8000
+      SQLITE_PATH: ./data/news_reader.sqlite
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_CONTENT_DB: news_content
+      MONGODB_AUDIT_DB: news_audit
+      UPLOAD_MAX_BYTES: 5242880
+    ports:
+      - "8000:8000"
+    volumes:
+      - sqlite_data:/app/backend/Database/data
+      - avatar_uploads:/app/backend/store/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    image: mongo:7.0
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  sqlite_data:
+  avatar_uploads:
+  mongo_data:
