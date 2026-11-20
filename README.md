@@ -158,5 +158,57 @@ Mở trình duyệt truy cập: `http://localhost:8000`
 4. **Giao diện, PWA & Triển khai (4 tiêu chí):**
    - Giao diện người dùng hiện đại, tinh tế, đầy đủ phản hồi Toast, trạng thái tải và empty state.
    - Thiết kế Responsive hoàn chỉnh cho Mobile (<576px), Tablet (768px-1024px) và Desktop (>1200px).
-   - PWA: Service Worker lưu bộ đệm tĩnh + IndexedDB lưu trữ bài viết và soạn nháp ngoại tuyến (Offline first), tự động đồng bộ khi có mạng trở lại.
+   - PWA: Service Worker + Manifest lưu giao diện tĩnh và nội dung bài báo đã mở để đọc ngoại tuyến; thao tác ghi khi offline chưa được đồng bộ.
    - Triển khai công khai trực tuyến trên Cloud HTTPS và đóng gói hoàn chỉnh bằng Docker Compose.
+
+---
+## 5. Hợp đồng API frontend dự kiến cho backend PHP
+
+Các trang HTML gọi API cùng origin dưới tiền tố `/api/`, gửi cookie phiên bằng `credentials: include`. API **chưa được triển khai trong phần frontend hiện tại**. Backend nên trả thành công theo dạng `{ "data": ... }`, lỗi theo dạng `{ "error": { "message": "...", "code": "..." } }`; các thao tác xóa có thể trả `204 No Content`. Nếu dùng CSRF token, backend có thể đưa token vào `<meta name="csrf-token">`; frontend sẽ gửi nó qua header `X-CSRF-Token`.
+
+### Đọc báo
+
+| Method | Endpoint | Dữ liệu chính |
+|---|---|---|
+| `GET` | `/api/articles?q=&category=&source=` | `{ "items": [...], "featured": {...} }` |
+| `GET` | `/api/articles/{id}` | `{ "article": {...} }` |
+| `GET` | `/api/sources` | `{ "items": [...] }` |
+| `GET` | `/api/categories` | `{ "items": [...] }` |
+
+Bài báo dùng các trường `id`, `title`, `summary`, `content`, `thumbnailUrl`, `category`, `source`, `publishedAt`, `isFeatured`, `isFavorite`, `visible`; `category` và `source` có thể là chuỗi tên hoặc object có `id`, `name`, `slug`.
+
+### Tài khoản và Reader
+
+| Method | Endpoint | Payload/response |
+|---|---|---|
+| `GET` | `/api/auth/me` | `{ "user": { "id", "email", "displayName", "role", "isActive", "isLocked", "avatarUrl", "preferences" } }`; trả `401` nếu chưa đăng nhập |
+| `POST` | `/api/auth/register` | `{ "email", "displayName", "password" }`; backend tạo session và gửi email kích hoạt |
+| `POST` | `/api/auth/login` | `{ "email", "password" }`; backend xác thực và tạo session |
+| `POST` | `/api/auth/logout` | `{}` |
+| `POST` | `/api/auth/activate` | `{ "token" }` |
+| `POST` | `/api/auth/activation/resend` | `{}` |
+| `POST` | `/api/auth/password-reset/request` | `{ "email" }` |
+| `POST` | `/api/auth/password-reset/confirm` | `{ "token", "password" }`; không tự đăng nhập lại |
+| `PATCH` | `/api/me` | `{ "displayName", "avatarUrl?" }` |
+| `POST` | `/api/me/avatar` | `multipart/form-data`, trường `avatar` |
+| `POST` | `/api/me/password` | `{ "currentPassword", "newPassword" }` |
+| `PATCH` | `/api/me/preferences` | `{ "fontSize?", "theme?" }` |
+| `GET` / `POST` | `/api/me/favorites` | Danh sách `{ "items": [{ "article": {...}, "folderId" }] }` / `{ "articleId", "folderId?" }` |
+| `DELETE` | `/api/me/favorites/{articleId}` | Bỏ yêu thích |
+| `GET` / `POST` | `/api/me/favorite-folders` | `{ "items": [...] }` / `{ "name" }`, tạo trả `{ "folder": {...} }` |
+| `GET` / `POST` / `DELETE` | `/api/me/reading-history` | Danh sách, ghi nhận `{ "articleId" }`, hoặc xóa lịch sử |
+| `POST` | `/api/me/categories` | `{ "name" }` |
+
+Email kích hoạt nên đưa người dùng về `/HTML/index.html?activationToken={token}`; email đặt lại mật khẩu nên trỏ tới `/HTML/ForgetPassword.html?token={token}`.
+
+Frontend chỉ gửi mật khẩu qua HTTPS khi triển khai; **hash mật khẩu, kiểm tra quyền, xác thực dữ liệu, giới hạn upload và bảo vệ session là trách nhiệm của backend PHP**. Backend cần trả lỗi xác thực/quyền phù hợp (`401`, `403`) và thông báo an toàn cho người dùng.
+
+### Quản trị
+
+| Method | Endpoint | Mục đích |
+|---|---|---|
+| `GET` | `/api/admin/dashboard` | Thống kê `{ "usersCount", "articlesCount", "visibleArticlesCount" }` |
+| `GET` / `PATCH` | `/api/admin/users`, `/api/admin/users/{id}` | Danh sách; cập nhật `{ "role?", "isLocked?" }` |
+| `GET` / `DELETE` | `/api/admin/activity-logs` | Lọc bằng `q`, `action`, `date`; xóa toàn bộ log |
+| `GET` / `POST` / `PATCH` / `DELETE` | `/api/admin/articles[/{id}]` | Quản lý bài báo; payload gồm title, categoryId, sourceId, summary, content và visible |
+| `GET` / `POST` / `PATCH` / `DELETE` | `/api/admin/sources[/{id}]` | Quản lý nguồn báo; payload gồm name, url, category |

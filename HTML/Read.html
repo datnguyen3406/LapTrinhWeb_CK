@@ -27,27 +27,32 @@
       <nav id="category-nav" class="category-nav" aria-label="Danh mục bài báo">
         <ul id="nav-categories" class="nav-categories">
           <li class="nav-category-item">
-            <a href="#mobile" id="cat-mobile" data-category="mobile">MOBILE</a>
+            <button type="button" id="cat-mobile" data-category="mobile">MOBILE</button>
           </li>
           <li class="nav-category-item">
-            <a href="#ai" id="cat-ai" data-category="ai">AI</a>
+            <button type="button" id="cat-ai" data-category="ai">AI</button>
           </li>
           <li class="nav-category-item">
-            <a href="#internet" id="cat-internet" data-category="internet">INTERNET</a>
+            <button type="button" id="cat-internet" data-category="internet">INTERNET</button>
           </li>
           <li class="nav-category-item">
-            <a href="#tin-ict" id="cat-tin-ict" data-category="tin-ict">TIN ICT</a>
+            <button type="button" id="cat-tin-ict" data-category="tin-ict">TIN ICT</button>
           </li>
           <li class="nav-category-item">
-            <a href="#kham-pha" id="cat-kham-pha" data-category="kham-pha">KHÁM PHÁ</a>
+            <button type="button" id="cat-kham-pha" data-category="kham-pha">KHÁM PHÁ</button>
           </li>
         </ul>
+      </nav>
+      <nav id="account-nav" class="account-nav" aria-label="Tài khoản">
+        <a href="Auth.html">Đăng nhập</a>
+        <a href="Regisger.html">Đăng ký</a>
       </nav>
     </div>
   </header>
 
   <main id="main-content" class="main-content">
-    <article id="article-detail-container" class="article-detail-container" data-article-id="">
+    <p id="article-state" class="page-state" role="status" hidden></p>
+    <article id="article-detail-container" class="article-detail-container" data-article-id="" hidden>
       <span id="article-category" class="article-category-badge"></span>
       <h1 id="article-title" class="article-title"></h1>
 
@@ -61,11 +66,16 @@
       <div id="article-content" class="article-content"></div>
 
       <div id="article-actions" class="article-actions">
+        <label for="favorite-folder">Thư mục yêu thích</label>
+        <select id="favorite-folder">
+          <option value="">Mặc định</option>
+        </select>
         <button type="button" id="btn-add-to-folder">Thêm vào thư mục yêu thích</button>
       </div>
     </article>
   </main>
 
+  <script src="../JavaScript/api.js"></script>
   <script src="../JavaScript/article_detail.js"></script>
 </body>
 </html>

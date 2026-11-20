@@ -9,9 +9,8 @@
 <body id="page-user-favorites">
   <header id="site-header" class="site-header">
     <div id="header-inner" class="header-inner">
-      <a href="index.html" id="brand-logo" class="brand-logo">GENK MAGAZINE</a>
+      <a href="../index.html" id="brand-logo" class="brand-logo">GENK MAGAZINE</a>
     
-      <!-- Thanh tìm kiếm bài báo -->
       <form id="header-search-form" class="header-search-form" role="search">
         <input
           type="search"
@@ -23,25 +22,28 @@
         />
         <button type="submit" id="btn-header-search" class="btn-header-search">Tìm</button>
       </form>
-      <!-- Thanh danh mục bài báo -->
       <nav id="category-nav" class="category-nav" aria-label="Danh mục bài báo">
         <ul id="nav-categories" class="nav-categories">
           <li class="nav-category-item">
-            <a href="#mobile" id="cat-mobile" data-category="mobile">MOBILE</a>
+            <button type="button" id="cat-mobile" data-category="mobile">MOBILE</button>
           </li>
           <li class="nav-category-item">
-            <a href="#ai" id="cat-ai" data-category="ai">AI</a>
+            <button type="button" id="cat-ai" data-category="ai">AI</button>
           </li>
           <li class="nav-category-item">
-            <a href="#internet" id="cat-internet" data-category="internet">INTERNET</a>
+            <button type="button" id="cat-internet" data-category="internet">INTERNET</button>
           </li>
           <li class="nav-category-item">
-            <a href="#tin-ict" id="cat-tin-ict" data-category="tin-ict">TIN ICT</a>
+            <button type="button" id="cat-tin-ict" data-category="tin-ict">TIN ICT</button>
           </li>
           <li class="nav-category-item">
-            <a href="#kham-pha" id="cat-kham-pha" data-category="kham-pha">KHÁM PHÁ</a>
+            <button type="button" id="cat-kham-pha" data-category="kham-pha">KHÁM PHÁ</button>
           </li>
         </ul>
+      </nav>
+      <nav id="account-nav" class="account-nav" aria-label="Tài khoản">
+        <a href="../Auth.html">Đăng nhập</a>
+        <a href="../Regisger.html">Đăng ký</a>
       </nav>
     </div>
   </header>
@@ -68,6 +70,7 @@
     </section>
   </main>
 
+  <script src="../../JavaScript/api.js"></script>
   <script src="../../JavaScript/favorites.js"></script>
 </body>
 </html>

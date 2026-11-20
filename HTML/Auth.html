@@ -15,21 +15,22 @@
     <section id="login-section">
       <h1>Đăng nhập</h1>
       <form id="form-login">
-        <label for="login-email">Tên đăng nhập</label>
-        <input type="text" id="login-email" required />
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" name="email" autocomplete="username" required />
 
         <label for="login-password">Mật khẩu</label>
-        <input type="password" id="login-password" required />
+        <input type="password" id="login-password" name="password" autocomplete="current-password" required />
 
         <button type="submit" id="btn-submit-login">Đăng nhập</button>
-        <button type="button" id="btn-register">Đăng ký</button>
-        <button href="ForgetPassword.html" type="button" id="btn-forget-password">Quên mật khẩu</button>
+        <a href="Regisger.html" id="btn-register">Đăng ký</a>
+        <a href="ForgetPassword.html" id="btn-forget-password">Quên mật khẩu</a>
       </form>
-      <p id="login-message"></p>
+      <p id="login-message" class="form-message" role="alert" hidden></p>
     </section>
     <hr />
   </main>
 
-  <script src="../JS/auth.js"></script>
+  <script src="../JavaScript/api.js"></script>
+  <script src="../JavaScript/auth.js"></script>
 </body>
 </html>

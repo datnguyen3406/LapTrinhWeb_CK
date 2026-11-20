@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#d71a21" />
   <title>GENK MAGAZINE</title>
   <link rel="stylesheet" href="../CSS/style.css" />
+  <link rel="manifest" href="../manifest.webmanifest" />
 </head>
 <body id="page-index">
   <header id="site-header" class="site-header">
@@ -27,21 +29,29 @@
       <nav id="category-nav" class="category-nav" aria-label="Danh mục bài báo">
         <ul id="nav-categories" class="nav-categories">
           <li class="nav-category-item">
-            <a href="#mobile" id="cat-mobile" data-category="mobile">MOBILE</a>
+            <button type="button" id="cat-mobile" data-category="mobile">MOBILE</button>
           </li>
           <li class="nav-category-item">
-            <a href="#ai" id="cat-ai" data-category="ai">AI</a>
+            <button type="button" id="cat-ai" data-category="ai">AI</button>
           </li>
           <li class="nav-category-item">
-            <a href="#internet" id="cat-internet" data-category="internet">INTERNET</a>
+            <button type="button" id="cat-internet" data-category="internet">INTERNET</button>
           </li>
           <li class="nav-category-item">
-            <a href="#tin-ict" id="cat-tin-ict" data-category="tin-ict">TIN ICT</a>
+            <button type="button" id="cat-tin-ict" data-category="tin-ict">TIN ICT</button>
           </li>
           <li class="nav-category-item">
-            <a href="#kham-pha" id="cat-kham-pha" data-category="kham-pha">KHÁM PHÁ</a>
+            <button type="button" id="cat-kham-pha" data-category="kham-pha">KHÁM PHÁ</button>
           </li>
         </ul>
+      </nav>
+      <label class="source-filter-label" for="source-filter">Nguồn</label>
+      <select id="source-filter" aria-label="Lọc theo nguồn báo">
+        <option value="">Tất cả nguồn</option>
+      </select>
+      <nav id="account-nav" class="account-nav" aria-label="Tài khoản">
+        <a href="Auth.html">Đăng nhập</a>
+        <a href="Regisger.html">Đăng ký</a>
       </nav>
     </div>
   </header>
@@ -59,6 +69,7 @@
     </section>
   </main>
 
+  <script src="../JavaScript/api.js"></script>
   <script src="../JavaScript/index.js"></script>
 </body>
 </html>

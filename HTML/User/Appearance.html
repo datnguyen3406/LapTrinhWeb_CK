@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cỡ chữ & Giao diện</title>
+  <link rel="stylesheet" href="../../CSS/style.css" />
+</head>
+<body>
+  <header>
+    <a href="../index.html">Trang chủ</a>
+    <a href="Reader.html">Không gian đọc</a>
+    <a href="Favourite.html">Yêu thích</a>
+    <a href="Profie.html">Hồ sơ</a>
+    <button type="button" id="btn-logout">Đăng xuất</button>
+  </header>
+
+  <main>
+    <h1>Cỡ chữ & Giao diện</h1>
+
+    <section class="setting-box">
+      <div class="setting-item">
+        <label>Cỡ chữ đọc báo</label>
+        <div class="font-controls">
+          <button type="button" id="btn-font-decrease">A−</button>
+          <span id="font-size-value">16px</span>
+          <button type="button" id="btn-font-increase">A+</button>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <label>Chế độ giao diện</label>
+        <div class="theme-controls">
+          <button type="button" id="btn-theme-light">Sáng</button>
+          <button type="button" id="btn-theme-dark">Tối</button>
+          <button type="button" id="btn-theme-auto">Theo hệ thống</button>
+        </div>
+      </div>
+
+      <a href="Profie.html" class="btn-back">← Quay lại hồ sơ</a>
+    </section>
+  </main>
+
+  <script src="../../JavaScript/api.js"></script>
+  <script src="../../JavaScript/appearance.js"></script>
+</body>
+</html>

@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Không gian Người đọc</title>
-  <link rel="stylesheet" href="../CSS/style.css" />
+  <link rel="stylesheet" href="../../CSS/style.css" />
 </head>
 <body>
   <header>
-    <a href="index.html" id="link-home">Trang chủ</a>
+    <a href="../index.html" id="link-home">Trang chủ</a>
     <a href="#profile-section" id="link-profile">Hồ sơ</a>
     <a href="#history-section" id="link-history">Lịch sử đọc</a>
     <a href="#favorites-section" id="link-favorites">Thư mục yêu thích</a>
@@ -27,8 +27,7 @@
         <label for="profile-name">Tên hiển thị</label>
         <input type="text" id="profile-name" />
 
-        <label for="profile-avatar">Avatar (URL hoặc file)</label>
-        <input type="text" id="profile-avatar-url" placeholder="Đường dẫn ảnh đại diện..." />
+        <label for="profile-avatar-file">Ảnh đại diện</label>
         <input type="file" id="profile-avatar-file" accept="image/*" />
 
         <button type="submit" id="btn-save-profile">Lưu hồ sơ</button>
@@ -40,7 +39,9 @@
         <input type="password" id="old-password" />
 
         <label for="new-password">Mật khẩu mới</label>
-        <input type="password" id="new-password" />
+        <input type="password" id="new-password" autocomplete="new-password" minlength="8" />
+        <label for="confirm-password">Nhập lại mật khẩu mới</label>
+        <input type="password" id="confirm-password" autocomplete="new-password" minlength="8" />
 
         <button type="submit" id="btn-change-password">Đổi mật khẩu</button>
       </form>
@@ -94,6 +95,7 @@
     </section>
   </main>
 
-  <script src="../JS/reader.js"></script>
+  <script src="../../JavaScript/api.js"></script>
+  <script src="../../JavaScript/reader.js"></script>
 </body>
 </html>

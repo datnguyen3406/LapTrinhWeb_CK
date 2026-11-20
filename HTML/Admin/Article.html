@@ -32,12 +32,12 @@
 
         <div class="form-group">
           <label for="admin-article-category">Danh mục</label>
-          <select id="admin-article-category" name="category"></select>
+          <select id="admin-article-category" name="category" required></select>
         </div>
 
         <div class="form-group">
           <label for="admin-article-source">Nguồn báo</label>
-          <select id="admin-article-source" name="source"></select>
+          <select id="admin-article-source" name="source" required></select>
         </div>
 
         <div class="form-group">
@@ -53,11 +53,14 @@
         <button type="submit" id="btn-save-article">Lưu bài báo</button>
         <button type="button" id="btn-reset-article">Làm mới form</button>
       </form>
+      <h2>Danh sách bài báo</h2>
+      <div id="admin-articles-list" class="admin-articles-list" aria-live="polite"></div>
     </section>
 
     <hr />
   </main>
 
+  <script src="../../JavaScript/api.js"></script>
   <script src="../../JavaScript/admin_articles.js"></script>
 </body>
 </html>
