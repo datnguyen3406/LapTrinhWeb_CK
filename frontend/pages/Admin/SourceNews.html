@@ -3,71 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quản lý bài báo</title>
+  <title>Quản lý nguồn báo - Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../../assets/css/style.css" />
 </head>
-<body id="page-admin-sources">
-  <header id="site-header" class="site-header">
-    <div id="header-inner" class="header-inner">
-      <a href="Dashboard.html" id="link-admin-dashboard" class="brand-logo">GENK MAGAZINE</a>
-      <nav id="admin-nav" class="admin-nav">
-        <a href="History.html" id="link-admin-history">Lịch sử hoạt động</a>
-        <a href="Article.html" id="link-admin-articles">Thêm Bài báo</a>
-        <a href="ManageUser.html" id="link-admin-users">Quản lí tài khoản</a>
-      </nav>
-    </div>
-  </header>
-
-  <main id="main-content" class="main-content">
-    <section id="sources-manage-section" class="sources-manage-section">
-      <h1>Quản lý báo</h1>
-
-      <form id="form-admin-source" class="admin-source-form">
-        <input type="hidden" id="admin-source-id" name="source_id" />
-        <div class="form-group">
-          <label for="admin-source-name">Tên nguồn báo</label>
-          <input type="text" id="admin-source-name" name="name" required />
-        </div>
-        <div class="form-group">
-          <label for="admin-source-url">Địa chỉ nguồn</label>
-          <input type="url" id="admin-source-url" name="url" required />
-        </div>
-        <div class="form-group">
-          <label for="admin-source-category">Danh mục</label>
-          <select id="admin-source-category" name="category" required>
-            <option value="">Chọn danh mục</option>
-            <option value="mobile">MOBILE</option>
-            <option value="ai">AI</option>
-            <option value="internet">INTERNET</option>
-            <option value="tin-ict">TIN ICT</option>
-            <option value="kham-pha">KHÁM PHÁ</option>
-          </select>
-        </div>
-        <div class="source-form-actions">
-          <button type="submit" id="btn-save-source">Lưu nguồn</button>
-          <button type="button" id="btn-cancel-source">Làm mới</button>
-        </div>
-      </form>
-      <div id="sources-search-bar" class="sources-search-bar">
-        <input
-          type="search"
-          id="search-source-input"
-          name="search_source"
-          placeholder="Tìm theo tên báo..."
-        />
-        <select id="filter-source-category" name="filter_category">
-          <option value="">Tất cả danh mục</option>
-          <option value="mobile">MOBILE</option>
-          <option value="ai">AI</option>
-          <option value="internet">INTERNET</option>
-          <option value="tin-ict">TIN ICT</option>
-          <option value="kham-pha">KHÁM PHÁ</option>
-        </select>
-        <button type="button" id="btn-search-source">Tìm kiếm</button>
-        <button type="button" id="btn-reset-source-filter">Đặt lại</button>
+<body id="page-admin-sources" class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm" id="site-header">
+    <div class="container" id="header-inner">
+      <a href="Dashboard.html" id="link-admin-dashboard" class="brand-logo navbar-brand font-weight-bold">GENK MAGAZINE ADMIN</a>
+      <div class="collapse navbar-collapse show" id="adminNavbar">
+        <ul class="navbar-nav ml-auto" id="admin-nav">
+          <li class="nav-item"><a class="nav-link" href="Dashboard.html" id="link-admin-dashboard-nav">Tổng quan</a></li>
+          <li class="nav-item"><a class="nav-link" href="Article.html" id="link-admin-articles">Quản lí Bài báo</a></li>
+          <li class="nav-item active"><a class="nav-link font-weight-bold" href="SourceNews.html" id="link-admin-sources">Quản lí Nguồn tin</a></li>
+          <li class="nav-item"><a class="nav-link" href="ManageUser.html" id="link-admin-users">Quản lí Tài khoản</a></li>
+          <li class="nav-item"><a class="nav-link" href="History.html" id="link-admin-history">Lịch sử hoạt động</a></li>
+          <li class="nav-item"><a class="nav-link btn btn-outline-light btn-sm text-light ml-lg-2 px-3" href="../index.html">Về trang chủ</a></li>
+        </ul>
       </div>
-      <div id="admin-sources-list" class="admin-sources-list" data-source="db-sources"></div>
-    </section>
+    </div>
+  </nav>
+
+  <main class="container my-5" id="main-content">
+    <div class="card shadow-sm border-0 mb-4" id="sources-manage-section">
+      <div class="card-header bg-primary text-white py-3">
+        <h4 class="mb-0 font-weight-bold">Quản lý nguồn tin báo chí</h4>
+      </div>
+      <div class="card-body p-4">
+        <form id="form-admin-source" class="admin-source-form mb-4 border p-3 rounded bg-light">
+          <input type="hidden" id="admin-source-id" name="source_id" />
+          <div class="form-row">
+            <div class="form-group col-md-5">
+              <label for="admin-source-name" class="font-weight-bold">Tên nguồn báo <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="admin-source-name" name="name" placeholder="Ví dụ: GenK, VnExpress..." required />
+            </div>
+            <div class="form-group col-md-4">
+              <label for="admin-source-url" class="font-weight-bold">Địa chỉ website <span class="text-danger">*</span></label>
+              <input type="url" class="form-control" id="admin-source-url" name="url" placeholder="https://..." required />
+            </div>
+            <div class="form-group col-md-3">
+              <label for="admin-source-category" class="font-weight-bold">Danh mục nguồn</label>
+              <select id="admin-source-category" name="category" class="form-control custom-select" required>
+                <option value="">Chọn danh mục</option>
+                <option value="mobile">MOBILE</option>
+                <option value="ai">AI</option>
+                <option value="internet">INTERNET</option>
+                <option value="tin-ict">TIN ICT</option>
+                <option value="kham-pha">KHÁM PHÁ</option>
+              </select>
+            </div>
+          </div>
+          <div class="source-form-actions">
+            <button type="submit" id="btn-save-source" class="btn btn-primary px-4 font-weight-bold">Lưu nguồn báo</button>
+            <button type="button" id="btn-cancel-source" class="btn btn-secondary px-4 ml-2">Làm mới</button>
+          </div>
+        </form>
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white">
+            <div id="sources-search-bar" class="form-inline">
+              <input type="search" class="form-control mr-2 mb-2" id="search-source-input" name="search_source" placeholder="Tìm theo tên báo..." />
+              <select id="filter-source-category" name="filter_category" class="form-control custom-select mr-2 mb-2">
+                <option value="">Tất cả danh mục</option>
+                <option value="mobile">MOBILE</option>
+                <option value="ai">AI</option>
+                <option value="internet">INTERNET</option>
+                <option value="tin-ict">TIN ICT</option>
+                <option value="kham-pha">KHÁM PHÁ</option>
+              </select>
+              <button type="button" id="btn-search-source" class="btn btn-outline-primary mr-2 mb-2">Tìm kiếm</button>
+              <button type="button" id="btn-reset-source-filter" class="btn btn-outline-secondary mb-2">Đặt lại</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="admin-sources-list" class="admin-sources-list" data-source="db-sources"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script src="../../assets/js/api.js"></script>

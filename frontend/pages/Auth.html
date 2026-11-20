@@ -3,31 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Đăng Nhập</title>
+  <title>Đăng Nhập - Genk Magazine</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
-<body>
-  <header>
-    <a href="index.html" id="link-back-home">GENK MAGAZINE</a>
-  </header>
+<body class="bg-light">
+  <nav class="navbar navbar-dark bg-dark py-3 shadow-sm">
+    <div class="container justify-content-center">
+      <a href="index.html" id="link-back-home" class="navbar-brand font-weight-bold">GENK MAGAZINE</a>
+    </div>
+  </nav>
 
-  <main>
-    <section id="login-section">
-      <h1>Đăng nhập</h1>
-      <form id="form-login">
-        <label for="login-username">Tên đăng nhập</label>
-        <input type="text" id="login-username" name="username" autocomplete="username" minlength="3" maxlength="32" required />
+  <main class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm border-0" id="login-section">
+          <div class="card-body p-4">
+            <h3 class="card-title font-weight-bold text-center mb-4">Đăng nhập tài khoản</h3>
+            
+            <form id="form-login">
+              <div class="form-group">
+                <label for="login-username" class="font-weight-bold">Tên đăng nhập</label>
+                <input type="text" class="form-control" id="login-username" name="username" autocomplete="username" minlength="3" maxlength="32" placeholder="Nhập username..." required />
+              </div>
 
-        <label for="login-password">Mật khẩu</label>
-        <input type="password" id="login-password" name="password" autocomplete="current-password" required />
+              <div class="form-group">
+                <label for="login-password" class="font-weight-bold">Mật khẩu</label>
+                <input type="password" class="form-control" id="login-password" name="password" autocomplete="current-password" placeholder="Nhập mật khẩu..." required />
+              </div>
 
-        <button type="submit" id="btn-submit-login">Đăng nhập</button>
-        <a href="Register.html" id="btn-register">Đăng ký</a>
-        <a href="ForgetPassword.html" id="btn-forget-password">Quên mật khẩu</a>
-      </form>
-      <p id="login-message" class="form-message" role="alert" hidden></p>
-    </section>
-    <hr />
+              <button type="submit" id="btn-submit-login" class="btn btn-primary btn-block font-weight-bold py-2">Đăng nhập</button>
+
+              <div class="d-flex justify-content-between mt-3 small font-weight-bold">
+                <a href="Register.html" id="btn-register" class="text-primary">Tạo tài khoản mới</a>
+                <a href="ForgetPassword.html" id="btn-forget-password" class="text-muted">Quên mật khẩu?</a>
+              </div>
+            </form>
+            <div id="login-message" class="form-message mt-3" role="alert" hidden></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script src="../assets/js/api.js"></script>

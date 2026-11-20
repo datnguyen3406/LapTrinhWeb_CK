@@ -1,5 +1,5 @@
-const SHELL_CACHE = "genk-shell-v11";
-const API_CACHE = "genk-private-v11";
+const SHELL_CACHE = "genk-shell-v12";
+const API_CACHE = "genk-private-v12";
 const APP_ROOT = new URL("./", self.location.href);
 const SHELL_FILES = [
   "pages/index.html",

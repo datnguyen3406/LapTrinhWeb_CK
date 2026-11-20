@@ -3,6 +3,7 @@
   const list = document.getElementById("admin-articles-list");
   const categorySelect = document.getElementById("admin-article-category");
   const sourceSelect = document.getElementById("admin-article-source");
+  const visibleCheck = document.getElementById("admin-article-visible");
   const field = (id) => document.getElementById(id);
 
   function fillOptions(select, items, placeholder) {
@@ -22,39 +23,65 @@
   function renderArticles(items) {
     list.replaceChildren();
     if (!items.length) {
-      App.ui.renderState(list, "Chưa có bài báo.");
+      App.ui.renderState(list, "Chưa có bài báo nào trong hệ thống.");
       return;
     }
     for (const article of items) {
-      const row = document.createElement("article");
-      row.className = "admin-list-row";
-      const title = document.createElement("h3");
+      const card = document.createElement("div");
+      card.className = "card mb-3 shadow-sm admin-article-item";
+
+      const cardBody = document.createElement("div");
+      cardBody.className = "card-body";
+
+      const title = document.createElement("h5");
+      title.className = "card-title mb-1";
       title.textContent = article.title;
-      const status = document.createElement("p");
-      status.textContent = article.visible ? "Đang hiển thị" : "Đang ẩn";
-      const edit = document.createElement("button");
-      edit.type = "button";
-      edit.textContent = "Sửa";
-      edit.addEventListener("click", () => {
+
+      const meta = document.createElement("div");
+      meta.className = "mb-2 text-muted small";
+      const catName = article.category?.name || "Chưa có danh mục";
+      const srcName = article.source || "Không có nguồn";
+      meta.textContent = `Chuyên mục: ${catName} | Nguồn: ${srcName}`;
+
+      const statusBadge = document.createElement("span");
+      statusBadge.className = `badge mr-2 ${article.visible ? "badge-success" : "badge-secondary"}`;
+      statusBadge.textContent = article.visible ? "Đang hiển thị" : "Bản nháp / Đang ẩn";
+
+      const btnGroup = document.createElement("div");
+      btnGroup.className = "mt-3 btn-group btn-group-sm";
+
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "btn btn-outline-primary";
+      editBtn.textContent = "Sửa bài";
+      editBtn.addEventListener("click", () => {
         field("admin-article-id").value = article.id;
         field("admin-article-title").value = article.title || "";
         categorySelect.value = article.categoryId || "";
         sourceSelect.value = article.sourceId || "";
         field("admin-article-summary").value = article.summary || "";
         field("admin-article-content").value = article.content || "";
+        if (visibleCheck) visibleCheck.checked = Boolean(article.visible);
         field("btn-save-article").textContent = "Cập nhật bài báo";
         form.scrollIntoView({ behavior: "smooth" });
       });
-      const visibility = document.createElement("button");
-      visibility.type = "button";
-      visibility.textContent = article.visible ? "Ẩn bài" : "Hiện bài";
-      visibility.addEventListener("click", () => setVisibility(article, visibility));
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.textContent = "Xóa";
-      remove.addEventListener("click", () => deleteArticle(article.id, remove));
-      row.append(title, status, edit, visibility, remove);
-      list.append(row);
+
+      const visibilityBtn = document.createElement("button");
+      visibilityBtn.type = "button";
+      visibilityBtn.className = `btn ${article.visible ? "btn-outline-warning" : "btn-outline-success"}`;
+      visibilityBtn.textContent = article.visible ? "Ẩn bài" : "Hiện bài";
+      visibilityBtn.addEventListener("click", () => setVisibility(article, visibilityBtn));
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn btn-outline-danger";
+      removeBtn.textContent = "Xóa";
+      removeBtn.addEventListener("click", () => deleteArticle(article.id, removeBtn));
+
+      btnGroup.append(editBtn, visibilityBtn, removeBtn);
+      cardBody.append(title, meta, statusBadge, btnGroup);
+      card.append(cardBody);
+      list.append(card);
     }
   }
 
@@ -77,8 +104,8 @@
     if (!Array.isArray(categories.items) || !Array.isArray(sources.items)) {
       throw new Error("Danh mục hoặc nguồn báo không đúng định dạng.");
     }
-    fillOptions(categorySelect, categories.items, "Chọn danh mục");
-    fillOptions(sourceSelect, sources.items, "Chọn nguồn báo");
+    fillOptions(categorySelect, categories.items, "-- Chọn danh mục bài báo --");
+    fillOptions(sourceSelect, sources.items, "-- Chọn nguồn báo --");
   }
 
   async function setVisibility(article, button) {
@@ -101,7 +128,7 @@
     try {
       await App.api.delete(`admin/articles/${encodeURIComponent(id)}`);
       await loadArticles();
-      App.ui.toast("Đã xóa bài báo.", "success");
+      App.ui.toast("Đã xóa bài báo thành công.", "success");
     } catch (error) {
       App.ui.toast(error.message, "error");
       button.disabled = false;
@@ -110,7 +137,7 @@
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    App.ui.setBusy(form, true, "Đang lưu...");
+    App.ui.setBusy(form, true, "Đang lưu bài báo...");
     const id = field("admin-article-id").value;
     const article = {
       title: field("admin-article-title").value.trim(),
@@ -118,15 +145,17 @@
       sourceId: sourceSelect.value,
       summary: field("admin-article-summary").value.trim(),
       content: field("admin-article-content").value.trim(),
+      visible: visibleCheck ? visibleCheck.checked : true,
     };
     try {
       if (id) await App.api.patch(`admin/articles/${encodeURIComponent(id)}`, article);
       else await App.api.post("admin/articles", article);
       form.reset();
       field("admin-article-id").value = "";
+      if (visibleCheck) visibleCheck.checked = true;
       field("btn-save-article").textContent = "Lưu bài báo";
       await loadArticles();
-      App.ui.toast(id ? "Đã cập nhật bài báo." : "Đã thêm bài báo.", "success");
+      App.ui.toast(id ? "Đã cập nhật bài báo." : "Đã đăng bài báo thành công!", "success");
     } catch (error) {
       App.ui.toast(error.message, "error");
     } finally {
@@ -136,6 +165,7 @@
 
   document.getElementById("btn-reset-article").addEventListener("click", () => {
     field("admin-article-id").value = "";
+    if (visibleCheck) visibleCheck.checked = true;
     field("btn-save-article").textContent = "Lưu bài báo";
   });
 

@@ -69,17 +69,12 @@ final class AuthService
 
     public function requestPasswordReset(string $username): array
     {
-        if (($this->config['APP_ENV'] ?? 'production') !== 'development') {
-            throw new ApiException(
-                'Chức năng cấp mã khôi phục chỉ bật trong môi trường kiểm thử.',
-                503,
-                'RESET_UNAVAILABLE',
-            );
-        }
-        $response = ['message' => 'Nếu tên đăng nhập tồn tại, mã khôi phục sẽ được tạo.'];
         $user = $this->users->findByUsername(strtolower(trim($username)));
         if (!$user) {
-            return $response;
+            return [
+                'success' => false,
+                'message' => 'Tên đăng nhập không tồn tại trong hệ thống.',
+            ];
         }
         $token = bin2hex(random_bytes(16));
         $this->users->setPasswordResetToken(
@@ -87,8 +82,25 @@ final class AuthService
             hash('sha256', $token),
             gmdate('Y-m-d\TH:i:s\Z', time() + 900),
         );
-        $response['resetCode'] = $token;
-        return $response;
+        return [
+            'success' => true,
+            'resetCode' => $token,
+            'message' => "Mã khôi phục của bạn là: {$token} (có hiệu lực trong 15 phút). Vui lòng lưu lại và nhập mật khẩu mới bên dưới.",
+        ];
+    }
+
+    public function generateRecoveryCode(string $userId): array
+    {
+        $token = bin2hex(random_bytes(16));
+        $this->users->setPasswordResetToken(
+            $userId,
+            hash('sha256', $token),
+            gmdate('Y-m-d\TH:i:s\Z', time() + 86400 * 7),
+        );
+        return [
+            'recoveryCode' => $token,
+            'message' => "Mã khôi phục dự phòng của bạn là: {$token} (có hiệu lực 7 ngày). Hãy lưu lại để sử dụng khi cần đổi/khôi phục mật khẩu!",
+        ];
     }
 
     public function confirmPasswordReset(array $input): void

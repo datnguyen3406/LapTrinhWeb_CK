@@ -17,12 +17,23 @@ final class ReaderService
 
     public function favorites(string $userId): array
     {
+        $favorites = $this->reader->favorites($userId);
+        if (empty($favorites)) {
+            return ['items' => []];
+        }
+        $articleIds = array_column($favorites, 'article_id');
+        $articles = $this->content->articlesByIds($articleIds, true);
+
         $items = [];
-        foreach ($this->reader->favorites($userId) as $favorite) {
-            $article = $this->content->article($favorite['article_id']);
-            if ($article) {
+        foreach ($favorites as $favorite) {
+            $id = $favorite['article_id'];
+            if (isset($articles[$id])) {
+                $article = $articles[$id];
                 $article['isFavorite'] = true;
                 $items[] = ['article' => $article, 'folderId' => $favorite['folder_id']];
+            } else {
+                // Tự động dọn bản ghi mồ côi nếu bài báo bên Mongo đã bị xóa hoặc ẩn
+                $this->reader->removeFavorite($userId, $id);
             }
         }
         return ['items' => $items];
@@ -73,11 +84,18 @@ final class ReaderService
 
     public function history(string $userId): array
     {
+        $entries = $this->reader->history($userId);
+        if (empty($entries)) {
+            return ['items' => []];
+        }
+        $articleIds = array_column($entries, 'article_id');
+        $articles = $this->content->articlesByIds($articleIds, true);
+
         $items = [];
-        foreach ($this->reader->history($userId) as $entry) {
-            $article = $this->content->article($entry['article_id']);
-            if ($article) {
-                $items[] = ['article' => $article, 'readAt' => $entry['read_at']];
+        foreach ($entries as $entry) {
+            $id = $entry['article_id'];
+            if (isset($articles[$id])) {
+                $items[] = ['article' => $articles[$id], 'readAt' => $entry['read_at']];
             }
         }
         return ['items' => $items];

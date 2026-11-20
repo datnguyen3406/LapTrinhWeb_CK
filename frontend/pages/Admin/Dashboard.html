@@ -3,28 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard</title>
+  <title>Bảng điều khiển Quản trị - Genk Magazine</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../../assets/css/style.css" />
 </head>
-<body id="page-admin-dashboard">
-  <header id="site-header" class="site-header">
-    <div id="header-inner" class="header-inner">
-      <a href="Dashboard.html" id="link-admin-dashboard" class="brand-logo">GENK MAGAZINE</a>
-      
+<body id="page-admin-dashboard" class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm" id="site-header">
+    <div class="container" id="header-inner">
+      <a href="Dashboard.html" id="brand-logo" class="navbar-brand font-weight-bold">GENK MAGAZINE ADMIN</a>
+      <div class="collapse navbar-collapse show" id="adminNavbar">
+        <ul class="navbar-nav ml-auto" id="admin-nav">
+          <li class="nav-item active"><a class="nav-link font-weight-bold" href="Dashboard.html" id="link-admin-dashboard">Tổng quan</a></li>
+          <li class="nav-item"><a class="nav-link" href="Article.html" id="link-admin-articles">Quản lí Bài báo</a></li>
+          <li class="nav-item"><a class="nav-link" href="SourceNews.html" id="link-admin-sources">Quản lí Nguồn tin</a></li>
+          <li class="nav-item"><a class="nav-link" href="ManageUser.html" id="link-admin-users">Quản lí Tài khoản</a></li>
+          <li class="nav-item"><a class="nav-link" href="History.html" id="link-admin-history">Lịch sử hoạt động</a></li>
+          <li class="nav-item"><a class="nav-link btn btn-outline-light btn-sm text-light ml-lg-2 px-3" href="../index.html">Về trang chủ</a></li>
+        </ul>
+      </div>
     </div>
-  </header>
+  </nav>
 
-  <main id="main-content" class="main-content">
-    <section id="admin-overview-section" class="admin-overview-section">
-      <h1 id="admin-dashboard-title">Bảng điều khiển quản trị</h1>
-      <div id="admin-stats-slot" class="admin-stats-slot"></div>
-      <nav id="admin-nav" class="admin-nav">
-        <a href="History.html" id="link-admin-history">Lịch sử hoạt động</a>
-        <a href="Article.html" id="link-admin-articles">Thêm Bài báo</a>
-        <a href="SourceNews.html" id="link-admin-sources">Quản lí Bài báo</a>
-        <a href="ManageUser.html" id="link-admin-users">Quản lí tài khoản</a>
-      </nav>
-    </section>
+  <main class="container my-5" id="main-content">
+    <div class="card shadow-sm border-0 mb-4" id="admin-overview-section">
+      <div class="card-header bg-primary text-white py-3">
+        <h3 id="admin-dashboard-title" class="mb-0 font-weight-bold">Bảng điều khiển quản trị hệ thống</h3>
+      </div>
+      <div class="card-body p-4">
+        <h5 class="font-weight-bold text-muted mb-3">Thống kê hoạt động</h5>
+        <div id="admin-stats-slot" class="admin-stats-slot row"></div>
+
+        <hr class="my-4" />
+        <h5 class="font-weight-bold text-muted mb-3">Lối tắt tác vụ quản trị</h5>
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <a href="Article.html" class="card text-center p-3 text-decoration-none shadow-sm h-100 hover-card border-primary">
+              <span class="h1 mb-2">📰</span>
+              <strong class="text-primary">Đăng & Quản lý bài báo</strong>
+              <small class="text-muted mt-1">Thêm bài viết mới, duyệt bài hiển thị</small>
+            </a>
+          </div>
+          <div class="col-md-3 mb-3">
+            <a href="SourceNews.html" class="card text-center p-3 text-decoration-none shadow-sm h-100 hover-card border-info">
+              <span class="h1 mb-2">📡</span>
+              <strong class="text-info">Quản lý nguồn tin</strong>
+              <small class="text-muted mt-1">Cấu hình RSS, domain báo chí</small>
+            </a>
+          </div>
+          <div class="col-md-3 mb-3">
+            <a href="ManageUser.html" class="card text-center p-3 text-decoration-none shadow-sm h-100 hover-card border-success">
+              <span class="h1 mb-2">👥</span>
+              <strong class="text-success">Quản lý người dùng</strong>
+              <small class="text-muted mt-1">Phân quyền, khóa/mở tài khoản</small>
+            </a>
+          </div>
+          <div class="col-md-3 mb-3">
+            <a href="History.html" class="card text-center p-3 text-decoration-none shadow-sm h-100 hover-card border-warning">
+              <span class="h1 mb-2">📋</span>
+              <strong class="text-warning">Nhật ký Audit Logs</strong>
+              <small class="text-muted mt-1">Theo dõi thao tác hệ thống</small>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script src="../../assets/js/api.js"></script>

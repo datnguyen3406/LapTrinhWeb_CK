@@ -3,52 +3,63 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lịch sử hoạt động</title>
+  <title>Lịch sử hoạt động - Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../../assets/css/style.css" />
 </head>
-<body id="page-admin-history">
-  <header id="site-header" class="site-header">
-    <div id="header-inner" class="header-inner">
-      <a href="Dashboard.html" id="brand-logo" class="brand-logo">GENK MAGAZINE</a>
-      <nav id="admin-nav" class="admin-nav">
-        <a href="Article.html" id="link-admin-articles">Thêm Bài báo</a>
-        <a href="SourceNews.html" id="link-admin-sources">Quản lí Bài báo</a>
-        <a href="ManageUser.html" id="link-admin-users">Quản lí tài khoản</a>
-      </nav>
-    </div>
-  </header>
-
-  <main id="main-content" class="main-content">
-    <section id="admin-history-section" class="admin-history-section">
-      <h1 id="admin-history-title">Lịch sử hoạt động (Admin Log)</h1>
-
-      <div id="history-filter-bar" class="history-filter-bar">
-        <input type="text" id="history-search-input" placeholder="Tìm theo hành động, đối tượng..." />
-        <select id="history-action-filter">
-          <option value="">Tất cả hành động</option>
-          <option value="create">Thêm mới</option>
-          <option value="update">Chỉnh sửa</option>
-          <option value="delete">Xóa</option>
-          <option value="role">Phân quyền (Role)</option>
-        </select>
-        <input type="date" id="history-date-filter" />
-        <button type="button" id="btn-filter-history">Lọc</button>
-        <button type="button" id="btn-clear-history-log">Xóa lịch sử</button>
+<body id="page-admin-history" class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm" id="site-header">
+    <div class="container" id="header-inner">
+      <a href="Dashboard.html" id="brand-logo" class="navbar-brand font-weight-bold">GENK MAGAZINE ADMIN</a>
+      <div class="collapse navbar-collapse show" id="adminNavbar">
+        <ul class="navbar-nav ml-auto" id="admin-nav">
+          <li class="nav-item"><a class="nav-link" href="Dashboard.html" id="link-admin-dashboard">Tổng quan</a></li>
+          <li class="nav-item"><a class="nav-link" href="Article.html" id="link-admin-articles">Quản lí Bài báo</a></li>
+          <li class="nav-item"><a class="nav-link" href="SourceNews.html" id="link-admin-sources">Quản lí Nguồn tin</a></li>
+          <li class="nav-item"><a class="nav-link" href="ManageUser.html" id="link-admin-users">Quản lí Tài khoản</a></li>
+          <li class="nav-item active"><a class="nav-link font-weight-bold" href="History.html" id="link-admin-history">Lịch sử hoạt động</a></li>
+          <li class="nav-item"><a class="nav-link btn btn-outline-light btn-sm text-light ml-lg-2 px-3" href="../index.html">Về trang chủ</a></li>
+        </ul>
       </div>
+    </div>
+  </nav>
 
-      <table id="admin-history-table" class="admin-history-table">
-        <thead>
-          <tr>
-            <th>Thời gian</th>
-            <th>Tài khoản Admin</th>
-            <th>Hành động</th>
-            <th>Đối tượng tác động</th>
-            <th>Chi tiết</th>
-          </tr>
-        </thead>
-        <tbody id="admin-history-tbody" data-source="db-admin-logs"></tbody>
-      </table>
-    </section>
+  <main class="container my-5" id="main-content">
+    <div class="card shadow-sm border-0" id="admin-history-section">
+      <div class="card-header bg-primary text-white py-3">
+        <h4 id="admin-history-title" class="mb-0 font-weight-bold">Nhật ký hoạt động (Audit Logs)</h4>
+      </div>
+      <div class="card-body p-4">
+        <div id="history-filter-bar" class="form-inline mb-3">
+          <input type="text" class="form-control mr-2 mb-2" id="history-search-input" placeholder="Tìm theo hành động, đối tượng..." />
+          <select id="history-action-filter" class="form-control custom-select mr-2 mb-2">
+            <option value="">Tất cả hành động</option>
+            <option value="create">Thêm mới</option>
+            <option value="update">Chỉnh sửa</option>
+            <option value="delete">Xóa</option>
+            <option value="role">Phân quyền (Role)</option>
+          </select>
+          <input type="date" class="form-control mr-2 mb-2" id="history-date-filter" />
+          <button type="button" id="btn-filter-history" class="btn btn-outline-primary mr-2 mb-2">Lọc nhật ký</button>
+          <button type="button" id="btn-clear-history-log" class="btn btn-outline-danger mb-2 ml-auto">Xóa toàn bộ log</button>
+        </div>
+
+        <div class="table-responsive">
+          <table id="admin-history-table" class="table table-hover table-striped border admin-history-table">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">Thời gian</th>
+                <th scope="col">Người thực hiện</th>
+                <th scope="col">Hành động</th>
+                <th scope="col">Đối tượng</th>
+                <th scope="col">Chi tiết</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script src="../../assets/js/api.js"></script>

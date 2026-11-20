@@ -92,6 +92,31 @@
     }
   });
 
+  async function loadCategories() {
+    const navList = document.getElementById("nav-categories");
+    if (!navList) return;
+    try {
+      const result = await App.api.get("categories");
+      if (Array.isArray(result.items) && result.items.length > 0) {
+        navList.replaceChildren();
+        for (const cat of result.items) {
+          const li = document.createElement("li");
+          li.className = "nav-category-item";
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.dataset.category = cat.slug;
+          btn.textContent = cat.name.toUpperCase();
+          btn.addEventListener("click", () => {
+            window.location.assign(App.url(`pages/index.html?category=${encodeURIComponent(cat.slug)}`));
+          });
+          li.append(btn);
+          navList.append(li);
+        }
+      }
+    } catch {}
+  }
+
   App.ui.initAccountNavigation();
+  loadCategories();
   loadArticle();
 })();

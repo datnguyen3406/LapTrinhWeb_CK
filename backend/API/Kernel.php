@@ -123,6 +123,10 @@ final class Kernel
                 $request->body(),
             ));
         }
+        if ($method === 'POST' && $path === 'me/recovery-code') {
+            $user = $this->auth->requireUser();
+            Response::success($this->authService->generateRecoveryCode($user['id']));
+        }
 
         if ($method === 'GET' && $path === 'me/favorites') {
             Response::success($this->readerService->favorites($this->auth->requireUser()['id']));
@@ -280,9 +284,11 @@ final class Kernel
         }
         if ($method === 'DELETE' && preg_match('#^admin/articles/([a-f0-9]{24})$#i', $path, $match)) {
             $actor = $this->auth->requireAdmin();
-            if (!$this->content->deleteArticle(strtolower($match[1]), $actor['id'])) {
+            $articleId = strtolower($match[1]);
+            if (!$this->content->deleteArticle($articleId, $actor['id'])) {
                 throw new ApiException('Không tìm thấy bài viết.', 404, 'ARTICLE_NOT_FOUND');
             }
+            $this->readerRepository->deleteArticleReferences($articleId);
             Response::noContent();
         }
         if ($method === 'GET' && $path === 'admin/sources') {
@@ -316,6 +322,7 @@ final class Kernel
     {
         $avatar = $this->accountService->avatar($id);
         if ($avatar) {
+            header('Cache-Control: public, max-age=86400');
             Response::file($avatar['content'], $avatar['mime']);
         }
         $media = $this->content->media($id);
@@ -326,6 +333,8 @@ final class Kernel
         if (!preg_match('#^[a-z0-9.+-]+/[a-z0-9.+-]+$#i', $mime)) {
             $mime = 'application/octet-stream';
         }
+        header('Cache-Control: public, max-age=86400');
+        header('ETag: "' . md5($id) . '"');
         Response::file($media['content'], $mime);
     }
 }

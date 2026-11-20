@@ -96,6 +96,13 @@ final class ReaderRepository
         $this->pdo->prepare('DELETE FROM reading_history WHERE user_id = ?')->execute([$userId]);
     }
 
+    public function deleteArticleReferences(string $articleId): void
+    {
+        $this->pdo->prepare('DELETE FROM bookmark_folders WHERE article_id = ?')->execute([$articleId]);
+        $this->pdo->prepare('DELETE FROM bookmarks WHERE article_id = ?')->execute([$articleId]);
+        $this->pdo->prepare('DELETE FROM reading_history WHERE article_id = ?')->execute([$articleId]);
+    }
+
     public function createCategory(string $userId, string $name): array
     {
         $id = bin2hex(random_bytes(16));

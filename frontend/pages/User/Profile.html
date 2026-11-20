@@ -3,55 +3,88 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hồ sơ cá nhân</title>
+  <title>Hồ sơ cá nhân - Genk Magazine</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../../assets/css/style.css" />
 </head>
-<body>
-  <header>
-    <a href="../index.html">Trang chủ</a>
-    <a href="Reader.html">Không gian đọc</a>
-    <a href="Favourite.html">Yêu thích</a>
-    <a href="Profile.html" class="active">Hồ sơ</a>
-    <button type="button" id="btn-logout">Đăng xuất</button>
-  </header>
-
-  <main>
-    <h1>Hồ sơ cá nhân</h1>
-
-    <div class="profile-layout">
-      <section id="profile-info">
-        <div class="avatar-box">
-          <img id="avatar-preview" src="../../assets/images/default-avatar.svg" alt="Avatar" width="140" height="140" />
-        </div>
-
-        <form id="form-profile">
-          <div class="form-group">
-            <label for="profile-name">Tên hiển thị</label>
-            <input type="text" id="profile-name" required />
-          </div>
-
-          <div class="form-group">
-            <label for="profile-username">Tên đăng nhập</label>
-            <input type="text" id="profile-username" disabled />
-          </div>
-
-          <div class="form-group">
-            <label for="profile-avatar-file">Đổi ảnh đại diện</label>
-            <input type="file" id="profile-avatar-file" accept="image/*" />
-          </div>
-
-          <button type="submit" id="btn-save-profile">Lưu thay đổi</button>
-        </form>
-        <p id="profile-message" class="form-message" role="status" hidden></p>
-      </section>
-
-      <aside class="profile-links">
-        <h3>Cài đặt khác</h3>
-        <ul>
-          <li><a href="ChangePassword.html">Đổi mật khẩu</a></li>
-          <li><a href="Appearance.html">Cỡ chữ & Giao diện</a></li>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+    <div class="container">
+      <a href="../index.html" class="navbar-brand font-weight-bold">GENK MAGAZINE</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#userNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="userNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html">Trang chủ</a></li>
+          <li class="nav-item"><a class="nav-link" href="Reader.html">Lịch sử đọc</a></li>
+          <li class="nav-item"><a class="nav-link" href="Favourite.html">Bài viết yêu thích</a></li>
+          <li class="nav-item active"><a class="nav-link font-weight-bold" href="Profile.html">Hồ sơ cá nhân</a></li>
+          <li class="nav-item"><button type="button" id="btn-logout" class="btn btn-outline-danger btn-sm ml-lg-2">Đăng xuất</button></li>
         </ul>
-      </aside>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container my-4">
+    <div class="row">
+      <div class="col-md-8">
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-primary text-white">
+            <h4 class="mb-0 font-weight-bold">Thông tin tài khoản</h4>
+          </div>
+          <div class="card-body">
+            <div class="text-center mb-4">
+              <img id="avatar-preview" src="../../assets/images/default-avatar.svg" alt="Avatar" class="rounded-circle img-thumbnail shadow-sm" width="130" height="130" style="object-fit: cover;" />
+            </div>
+
+            <form id="form-profile">
+              <div class="form-group">
+                <label for="profile-name" class="font-weight-bold">Tên hiển thị <span class="text-danger">*</span></label>
+                <input type="text" id="profile-name" class="form-control" placeholder="Nhập tên hiển thị..." required />
+              </div>
+
+              <div class="form-group">
+                <label for="profile-username" class="font-weight-bold">Tên đăng nhập</label>
+                <input type="text" id="profile-username" class="form-control bg-light" disabled />
+                <small class="form-text text-muted">Tên đăng nhập không thể thay đổi sau khi tạo tài khoản.</small>
+              </div>
+
+              <div class="form-group">
+                <label for="profile-avatar-file" class="font-weight-bold">Đổi ảnh đại diện (Tối đa 5 MB: JPG, PNG, WebP)</label>
+                <input type="file" id="profile-avatar-file" class="form-control-file" accept="image/jpeg,image/png,image/webp" />
+              </div>
+
+              <!-- Mục mã khôi phục tài khoản dự phòng -->
+              <div class="card bg-light border-info mb-4">
+                <div class="card-body py-3">
+                  <h6 class="font-weight-bold text-info mb-1">Mã khôi phục tài khoản dự phòng</h6>
+                  <p class="small text-muted mb-2">Bạn có thể tạo mã khôi phục để lưu trữ dự phòng, dùng để đặt lại mật khẩu hoặc đổi thông tin khi cần thiết.</p>
+                  <div class="input-group">
+                    <input type="text" id="profile-recovery-code" class="form-control font-weight-bold text-primary bg-white" readonly placeholder="Bấm nút bên cạnh để lấy mã..." />
+                    <div class="input-group-append">
+                      <button type="button" id="btn-generate-recovery" class="btn btn-info font-weight-bold">Tạo / Lấy mã dự phòng</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" id="btn-save-profile" class="btn btn-primary px-4 py-2 font-weight-bold">Lưu thay đổi</button>
+            </form>
+            <div id="profile-message" class="form-message mt-3" role="status" hidden></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-white font-weight-bold">Cài đặt khác</div>
+          <div class="list-group list-group-flush">
+            <a href="ChangePassword.html" class="list-group-item list-group-item-action">🔒 Đổi mật khẩu</a>
+            <a href="Appearance.html" class="list-group-item list-group-item-action">🎨 Tùy chỉnh Cỡ chữ & Giao diện</a>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 

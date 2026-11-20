@@ -163,10 +163,45 @@
     if (button) toggleFavorite(button);
   });
 
+  async function loadCategories() {
+    const navList = document.getElementById("nav-categories");
+    if (!navList) return;
+    try {
+      const result = await App.api.get("categories");
+      if (Array.isArray(result.items) && result.items.length > 0) {
+        navList.replaceChildren();
+        const allLi = document.createElement("li");
+        allLi.className = "nav-category-item";
+        const allBtn = document.createElement("button");
+        allBtn.type = "button";
+        allBtn.dataset.category = "";
+        allBtn.textContent = "TẤT CẢ";
+        allBtn.classList.toggle("is-active", !category);
+        allLi.append(allBtn);
+        navList.append(allLi);
+
+        for (const cat of result.items) {
+          const li = document.createElement("li");
+          li.className = "nav-category-item";
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.dataset.category = cat.slug;
+          btn.textContent = cat.name.toUpperCase();
+          btn.classList.toggle("is-active", cat.slug === category);
+          li.append(btn);
+          navList.append(li);
+        }
+      }
+    } catch {
+      // Fallback giữ nguyên danh mục nếu có lỗi
+    }
+  }
+
   App.ui.initAccountNavigation();
   document.querySelectorAll("#category-nav [data-category]").forEach((item) => {
     item.classList.toggle("is-active", item.dataset.category === category);
   });
+  loadCategories();
   loadSources();
   loadArticles();
 })();

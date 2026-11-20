@@ -3,26 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quản lý tài khoản</title>
+  <title>Quản lý tài khoản - Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="../../assets/css/style.css" />
 </head>
-<body id="page-admin-users">
-  <header id="site-header" class="site-header">
-    <div id="header-inner" class="header-inner">
-      <a href="Dashboard.html" id="brand-logo" class="brand-logo">GENK MAGAZINE</a>
-      <nav id="admin-nav" class="admin-nav">
-        <a href="History.html" id="link-admin-history">Lịch sử hoạt động</a>
-        <a href="Article.html" id="link-admin-articles">Thêm Bài báo</a>
-        <a href="SourceNews.html" id="link-admin-sources">Quản lí Bài báo</a>
-      </nav>
+<body id="page-admin-users" class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm" id="site-header">
+    <div class="container" id="header-inner">
+      <a href="Dashboard.html" id="brand-logo" class="navbar-brand font-weight-bold">GENK MAGAZINE ADMIN</a>
+      <div class="collapse navbar-collapse show" id="adminNavbar">
+        <ul class="navbar-nav ml-auto" id="admin-nav">
+          <li class="nav-item"><a class="nav-link" href="Dashboard.html" id="link-admin-dashboard">Tổng quan</a></li>
+          <li class="nav-item"><a class="nav-link" href="Article.html" id="link-admin-articles">Quản lí Bài báo</a></li>
+          <li class="nav-item"><a class="nav-link" href="SourceNews.html" id="link-admin-sources">Quản lí Nguồn tin</a></li>
+          <li class="nav-item active"><a class="nav-link font-weight-bold" href="ManageUser.html" id="link-admin-users">Quản lí Tài khoản</a></li>
+          <li class="nav-item"><a class="nav-link" href="History.html" id="link-admin-history">Lịch sử hoạt động</a></li>
+          <li class="nav-item"><a class="nav-link btn btn-outline-light btn-sm text-light ml-lg-2 px-3" href="../index.html">Về trang chủ</a></li>
+        </ul>
+      </div>
     </div>
-  </header>
+  </nav>
 
-  <main id="main-content" class="main-content">
-    <section id="users-manage-section" class="users-manage-section">
-      <h1>Quản lý tài khoản </h1>
-      <div id="admin-users-list" class="admin-users-list"></div>
-    </section>
+  <main class="container my-5" id="main-content">
+    <div class="card shadow-sm border-0" id="users-manage-section">
+      <div class="card-header bg-primary text-white py-3">
+        <h4 class="mb-0 font-weight-bold">Quản lý tài khoản người dùng</h4>
+      </div>
+      <div class="card-body p-4">
+        <div class="table-responsive">
+          <div id="admin-users-list" class="admin-users-list"></div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <script src="../../assets/js/api.js"></script>

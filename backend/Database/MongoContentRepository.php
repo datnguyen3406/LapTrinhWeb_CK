@@ -29,11 +29,17 @@ final class MongoContentRepository
         if (!empty($filters['q'])) {
             $filter['$text'] = ['$search' => $filters['q']];
         }
+        $page = max(1, (int) ($filters['page'] ?? 1));
+        $limit = max(1, min(100, (int) ($filters['limit'] ?? 50)));
+        $skip = ($page - 1) * $limit;
+
         $items = $this->mongo->find($this->contentDb, 'articles', $filter, [
             'sort' => ['published_at' => -1, '_id' => -1],
-            'limit' => 100,
+            'skip' => $skip,
+            'limit' => $limit,
         ]);
-        return array_map(fn (object $document): array => $this->formatArticle($document), $items);
+        [$categoryMap, $sourceMap] = $this->batchLoadLookupMaps($items);
+        return array_map(fn (object $document): array => $this->formatArticle($document, $categoryMap, $sourceMap), $items);
     }
 
     public function adminArticles(): array
@@ -44,7 +50,33 @@ final class MongoContentRepository
             [],
             ['sort' => ['updated_at' => -1], 'limit' => 100],
         );
-        return array_map(fn (object $document): array => $this->formatArticle($document), $items);
+        [$categoryMap, $sourceMap] = $this->batchLoadLookupMaps($items);
+        return array_map(fn (object $document): array => $this->formatArticle($document, $categoryMap, $sourceMap), $items);
+    }
+
+    public function articlesByIds(array $ids, bool $publicOnly = true): array
+    {
+        $objectIds = [];
+        foreach ($ids as $id) {
+            if (is_string($id) && preg_match('/^[a-f0-9]{24}$/i', $id)) {
+                $objectIds[] = MongoDatabase::objectId($id);
+            }
+        }
+        if (empty($objectIds)) {
+            return [];
+        }
+        $filter = ['_id' => ['$in' => $objectIds]];
+        if ($publicOnly) {
+            $filter['status'] = 'published';
+        }
+        $items = $this->mongo->find($this->contentDb, 'articles', $filter);
+        [$categoryMap, $sourceMap] = $this->batchLoadLookupMaps($items);
+        $result = [];
+        foreach ($items as $item) {
+            $formatted = $this->formatArticle($item, $categoryMap, $sourceMap);
+            $result[$formatted['id']] = $formatted;
+        }
+        return $result;
     }
 
     public function article(string $id, bool $publicOnly = true): ?array
@@ -180,10 +212,9 @@ final class MongoContentRepository
         if ($content === '') {
             throw new ApiException('Nội dung bài viết không được để trống.', 422, 'VALIDATION_ERROR');
         }
-        $visible = $input['visible'] ?? false;
-        if (!is_bool($visible)) {
-            throw new ApiException('Trạng thái hiển thị không hợp lệ.', 422, 'VALIDATION_ERROR');
-        }
+        $visible = array_key_exists('visible', $input)
+            ? (is_bool($input['visible']) ? $input['visible'] : filter_var($input['visible'], FILTER_VALIDATE_BOOLEAN))
+            : true;
         $summary = trim((string) ($input['summary'] ?? ''));
         if (mb_strlen($summary) > 1000) {
             throw new ApiException('Tóm tắt không được vượt quá 1000 ký tự.', 422, 'VALIDATION_ERROR');
@@ -471,29 +502,80 @@ final class MongoContentRepository
         return $value;
     }
 
-    private function formatArticle(object $document): array
+    /**
+     * Batch load Categories and Sources lookup maps to completely eliminate N+1 queries.
+     * @param list<object> $documents
+     * @return array{0: array<string, array{id: string, name: string, slug: string}>, 1: array<string, array>}
+     */
+    private function batchLoadLookupMaps(array $documents): array
+    {
+        $categoryIds = [];
+        $sourceIds = [];
+        foreach ($documents as $doc) {
+            $catId = $doc->category_ids[0] ?? null;
+            if ($catId instanceof \MongoDB\BSON\ObjectId) {
+                $categoryIds[(string) $catId] = $catId;
+            }
+            $srcId = $doc->source_id ?? null;
+            if ($srcId instanceof \MongoDB\BSON\ObjectId) {
+                $sourceIds[(string) $srcId] = $srcId;
+            }
+        }
+
+        $categoryMap = [];
+        if (!empty($categoryIds)) {
+            $cats = $this->mongo->find($this->contentDb, 'categories', ['_id' => ['$in' => array_values($categoryIds)]]);
+            foreach ($cats as $cat) {
+                $categoryMap[(string) $cat->_id] = [
+                    'id' => (string) $cat->_id,
+                    'name' => (string) ($cat->name ?? ''),
+                    'slug' => (string) ($cat->slug ?? ''),
+                ];
+            }
+        }
+
+        $sourceMap = [];
+        if (!empty($sourceIds)) {
+            $sources = $this->mongo->find($this->contentDb, 'news_sources', ['_id' => ['$in' => array_values($sourceIds)]]);
+            foreach ($sources as $source) {
+                $sourceMap[(string) $source->_id] = $this->formatSource($source);
+            }
+        }
+
+        return [$categoryMap, $sourceMap];
+    }
+
+    private function formatArticle(object $document, ?array $categoryMap = null, ?array $sourceMap = null): array
     {
         $normalized = self::normalize($document);
         $category = null;
         $categoryId = $normalized['category_ids'][0] ?? null;
         if ($categoryId) {
-            $matches = $this->mongo->find(
-                $this->contentDb,
-                'categories',
-                ['_id' => MongoDatabase::objectId($categoryId)],
-                ['limit' => 1],
-            );
-            if ($matches) {
-                $category = [
-                    'id' => (string) $matches[0]->_id,
-                    'name' => (string) ($matches[0]->name ?? ''),
-                    'slug' => (string) ($matches[0]->slug ?? ''),
-                ];
+            if ($categoryMap !== null) {
+                $category = $categoryMap[$categoryId] ?? null;
+            } else {
+                $matches = $this->mongo->find(
+                    $this->contentDb,
+                    'categories',
+                    ['_id' => MongoDatabase::objectId($categoryId)],
+                    ['limit' => 1],
+                );
+                if ($matches) {
+                    $category = [
+                        'id' => (string) $matches[0]->_id,
+                        'name' => (string) ($matches[0]->name ?? ''),
+                        'slug' => (string) ($matches[0]->slug ?? ''),
+                    ];
+                }
             }
         }
         $source = null;
         if (!empty($normalized['source_id'])) {
-            $source = $this->source($normalized['source_id']);
+            if ($sourceMap !== null) {
+                $source = $sourceMap[$normalized['source_id']] ?? null;
+            } else {
+                $source = $this->source($normalized['source_id']);
+            }
         }
         $content = $normalized['content_plain_text'] ?? '';
         if ($content === '' && isset($normalized['content']) && is_array($normalized['content'])) {

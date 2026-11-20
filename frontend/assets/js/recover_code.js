@@ -23,7 +23,7 @@
           token: codeInput.value.trim(),
           password,
         });
-        App.ui.showMessage(message, "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.", "success");
+        App.ui.showMessage(message, "Đổi mật khẩu thành công! Hệ thống đang chuyển đến trang Đăng nhập...", "success");
         form.reset();
         window.setTimeout(() => window.location.assign(App.url("pages/Auth.html")), 1200);
       } else {
@@ -38,21 +38,23 @@
         codeGroup.hidden = false;
         passwordGroup.hidden = false;
         codeInput.required = true;
+        codeInput.value = result.resetCode; // Tự động điền mã cho người dùng
         passwordInput.required = true;
         confirmationInput.required = true;
-        submit.textContent = "Đặt lại mật khẩu";
+        submit.textContent = "Xác nhận & Đổi mật khẩu";
         resetRequested = true;
-        App.ui.showMessage(message, "Mã dùng một lần, hết hạn sau 15 phút:", "success");
-        const code = document.createElement("code");
-        code.className = "recovery-code";
-        code.textContent = result.resetCode;
-        message.append(document.createElement("br"), code);
+
+        App.ui.showMessage(
+          message,
+          `Mã khôi phục của bạn là: ${result.resetCode} (Hết hạn sau 15 phút). Đã tự động điền vào ô bên dưới, vui lòng nhập mật khẩu mới để hoàn tất!`,
+          "success",
+        );
       }
     } catch (error) {
       App.ui.showMessage(message, error.message);
     } finally {
       App.ui.setBusy(form, false);
-      if (resetRequested) submit.textContent = "Đặt lại mật khẩu";
+      if (resetRequested) submit.textContent = "Xác nhận & Đổi mật khẩu";
     }
   });
 })();
