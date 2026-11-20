@@ -9,9 +9,11 @@ final class MongoContentRepository
 {
     private string $contentDb;
     private string $auditDb;
+    private array $config;
 
     public function __construct(private readonly MongoDatabase $mongo, array $config)
     {
+        $this->config = $config;
         $this->contentDb = $config['MONGODB_CONTENT_DB'] ?? 'news_content';
         $this->auditDb = $config['MONGODB_AUDIT_DB'] ?? 'news_audit';
     }
@@ -240,6 +242,13 @@ final class MongoContentRepository
             throw new ApiException('Không tìm thấy nguồn báo.', 422, 'INVALID_REFERENCE');
         }
         $slug = self::slug($title) . '-' . bin2hex(random_bytes(4));
+        $coverMediaId = null;
+        if (!empty($input['coverMediaId'])) {
+            $coverMediaId = MongoDatabase::objectId((string) $input['coverMediaId']);
+            if (!$this->mongo->readFile($this->contentDb, (string) $coverMediaId)) {
+                throw new ApiException('Không tìm thấy ảnh bìa.', 422, 'INVALID_REFERENCE');
+            }
+        }
         $id = $this->mongo->insert($this->contentDb, 'articles', [
             'title' => $title,
             'slug' => $slug,
@@ -249,7 +258,7 @@ final class MongoContentRepository
             'category_ids' => $categoryIds,
             'source_id' => $sourceId,
             'author_name' => null,
-            'cover_image' => null,
+            'cover_image' => $coverMediaId ? ['file_id' => $coverMediaId] : null,
             'status' => $visible ? 'published' : 'draft',
             'published_at' => $visible ? $now : null,
             'created_by' => $actorId,
@@ -301,6 +310,13 @@ final class MongoContentRepository
                 throw new ApiException('Không tìm thấy nguồn báo.', 422, 'INVALID_REFERENCE');
             }
             $changes['source_id'] = $sourceId;
+        }
+        if (array_key_exists('coverMediaId', $input)) {
+            $coverMediaId = $input['coverMediaId'] ? MongoDatabase::objectId((string) $input['coverMediaId']) : null;
+            if ($coverMediaId && !$this->mongo->readFile($this->contentDb, (string) $coverMediaId)) {
+                throw new ApiException('Không tìm thấy ảnh bìa.', 422, 'INVALID_REFERENCE');
+            }
+            $changes['cover_image'] = $coverMediaId ? ['file_id' => $coverMediaId] : null;
         }
         if (array_key_exists('visible', $input)) {
             if (!is_bool($input['visible'])) {
@@ -476,6 +492,38 @@ final class MongoContentRepository
     public function media(string $id): ?array
     {
         return $this->mongo->readFile($this->contentDb, $id);
+    }
+
+    public function uploadMedia(?array $upload, string $actorId): array
+    {
+        if (!$upload || !isset($upload['error'], $upload['tmp_name'], $upload['size'])) {
+            throw new ApiException('Thiếu tệp media.', 422, 'INVALID_UPLOAD');
+        }
+        if ($upload['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($upload['tmp_name'])) {
+            throw new ApiException('Không thể nhận tệp tải lên.', 422, 'INVALID_UPLOAD');
+        }
+        $maxBytes = (int) ($this->config['UPLOAD_MAX_BYTES'] ?? 5242880);
+        if ($upload['size'] < 1 || $upload['size'] > $maxBytes) {
+            throw new ApiException('Tệp media vượt quá dung lượng cho phép.', 413, 'UPLOAD_TOO_LARGE');
+        }
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            throw new ApiException('Chỉ chấp nhận ảnh JPEG, PNG hoặc WebP.', 415, 'UNSUPPORTED_MEDIA_TYPE');
+        }
+        $content = file_get_contents($upload['tmp_name']);
+        if ($content === false) {
+            throw new ApiException('Không thể đọc tệp tải lên.', 500, 'UPLOAD_STORAGE_ERROR');
+        }
+        $filename = basename((string) ($upload['name'] ?? 'upload'));
+        $id = $this->mongo->writeFile(
+            $this->contentDb,
+            $filename,
+            $mime,
+            $content,
+            ['uploaded_by' => $actorId, 'type' => 'article_image'],
+        );
+        $this->recordActivity($actorId, 'admin', 'media.upload', 'media', $id);
+        return ['id' => $id, 'url' => '/api/media/' . $id];
     }
 
     public static function normalize(mixed $value): mixed

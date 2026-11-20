@@ -48,7 +48,8 @@ final class UsersRepository
     ): array
     {
         $id = self::uuid();
-        $recoveryHash = password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT);
+        $recoveryCode = bin2hex(random_bytes(32));
+        $recoveryHash = password_hash($recoveryCode, PASSWORD_DEFAULT);
         $this->pdo->beginTransaction();
         try {
             $statement = $this->pdo->prepare(
@@ -64,7 +65,8 @@ final class UsersRepository
             }
             throw $error;
         }
-        return $this->findById($id) ?? throw new \RuntimeException('Không thể tạo tài khoản.');
+        $user = $this->findById($id) ?? throw new \RuntimeException('Không thể tạo tài khoản.');
+        return ['user' => $user, 'recoveryCode' => $recoveryCode];
     }
 
     public function updateProfile(string $id, array $fields): ?array
@@ -102,10 +104,51 @@ final class UsersRepository
         )->execute([$passwordHash, $id]);
     }
 
+    public function setRecoveryKeyHash(string $id, string $hash): void
+    {
+        $this->pdo->prepare('UPDATE users SET recovery_key_hash = ? WHERE id = ?')
+            ->execute([$hash, $id]);
+    }
+
+    public function verifyRecoveryKey(string $id, string $recoveryKey): bool
+    {
+        $statement = $this->pdo->prepare('SELECT recovery_key_hash FROM users WHERE id = ?');
+        $statement->execute([$id]);
+        $hash = $statement->fetchColumn();
+        return is_string($hash) && $recoveryKey !== '' && password_verify($recoveryKey, $hash);
+    }
+
+    public function resetPasswordWithRecoveryKey(string $id, string $passwordHash): string
+    {
+        $nextRecoveryCode = bin2hex(random_bytes(32));
+        $this->pdo->beginTransaction();
+        try {
+            $this->pdo->prepare(
+                'UPDATE users
+                 SET password_hash = ?,
+                     recovery_key_hash = ?,
+                     session_version = session_version + 1
+                 WHERE id = ?',
+            )->execute([
+                $passwordHash,
+                password_hash($nextRecoveryCode, PASSWORD_DEFAULT),
+                $id,
+            ]);
+            $this->pdo->commit();
+        } catch (\Throwable $error) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $error;
+        }
+        return $nextRecoveryCode;
+    }
+
     public function setActive(string $id, bool $isActive): void
     {
-        $this->pdo->prepare('UPDATE users SET is_active = ? WHERE id = ?')
-            ->execute([$isActive ? 1 : 0, $id]);
+        $this->pdo->prepare(
+            'UPDATE users SET is_active = ?, session_version = session_version + 1 WHERE id = ?',
+        )->execute([$isActive ? 1 : 0, $id]);
     }
 
     public function deleteById(string $id): void

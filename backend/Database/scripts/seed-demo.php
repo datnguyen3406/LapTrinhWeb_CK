@@ -23,16 +23,22 @@ spl_autoload_register(static function (string $class) use ($backendRoot): void {
 
 try {
     $env = Environment::load($backendRoot . '/.env');
+    $appEnv = strtolower((string) ($env['APP_ENV'] ?? 'development'));
+    if ($appEnv === 'production' || $appEnv === 'prod') {
+        fwrite(STDOUT, "Seed demo skipped outside development.\n");
+        exit(0);
+    }
     $database = new SqliteDatabase($backendRoot);
     $users = new UsersRepository($database->pdo());
 
     // 1. Seed Admin Account
     if ($users->activeAdminCount() === 0 && !$users->findByUsername('admin')) {
-        $user = $users->create(
+        $created = $users->create(
             'admin',
             'Site Admin',
             password_hash('Admin@123456', PASSWORD_BCRYPT),
         );
+        $user = $created['user'];
         $users->setRole($user['id'], 'admin');
         fwrite(STDOUT, "Created development admin: admin / Admin@123456\n");
     } else {

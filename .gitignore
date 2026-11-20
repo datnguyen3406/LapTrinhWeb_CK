@@ -3,3 +3,5 @@
 /Database/database.sqlite-wal
 /vendor/
 /backend/.env
+/backend/Database/data/*.sqlite*
+/backend/store/uploads/

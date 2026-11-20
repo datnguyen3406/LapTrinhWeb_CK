@@ -31,7 +31,8 @@ final class AuthService
         }
 
         try {
-            $user = $this->users->create($username, $name, password_hash($password, PASSWORD_BCRYPT));
+            $created = $this->users->create($username, $name, password_hash($password, PASSWORD_BCRYPT));
+            $user = $created['user'];
         } catch (\PDOException $error) {
             if (str_contains(strtolower($error->getMessage()), 'unique')) {
                 throw new ApiException('Tên đăng nhập đã được sử dụng.', 409, 'USERNAME_EXISTS');
@@ -45,6 +46,7 @@ final class AuthService
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         return [
             'user' => $this->publicUser($user),
+            'recoveryCode' => $created['recoveryCode'],
             'csrfToken' => $_SESSION['csrf_token'],
         ];
     }
@@ -60,6 +62,9 @@ final class AuthService
         if ((int) $user['is_locked'] === 1) {
             throw new ApiException('Tài khoản đã bị khóa.', 403, 'ACCOUNT_LOCKED');
         }
+        if ((int) $user['is_active'] !== 1) {
+            throw new ApiException('Tài khoản đã bị vô hiệu hóa.', 403, 'ACCOUNT_INACTIVE');
+        }
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_session_version'] = (int) $user['session_version'];
@@ -69,53 +74,39 @@ final class AuthService
 
     public function requestPasswordReset(string $username): array
     {
-        $user = $this->users->findByUsername(strtolower(trim($username)));
-        if (!$user) {
-            return [
-                'success' => false,
-                'message' => 'Tên đăng nhập không tồn tại trong hệ thống.',
-            ];
-        }
-        $token = bin2hex(random_bytes(16));
-        $this->users->setPasswordResetToken(
-            $user['id'],
-            hash('sha256', $token),
-            gmdate('Y-m-d\TH:i:s\Z', time() + 900),
-        );
         return [
-            'success' => true,
-            'resetCode' => $token,
-            'message' => "Mã khôi phục của bạn là: {$token} (có hiệu lực trong 15 phút). Vui lòng lưu lại và nhập mật khẩu mới bên dưới.",
+            'success' => false,
+            'message' => 'Khôi phục mật khẩu cần mã khôi phục cá nhân. Không còn mã đặt lại công khai.',
         ];
     }
 
     public function generateRecoveryCode(string $userId): array
     {
-        $token = bin2hex(random_bytes(16));
-        $this->users->setPasswordResetToken(
-            $userId,
-            hash('sha256', $token),
-            gmdate('Y-m-d\TH:i:s\Z', time() + 86400 * 7),
-        );
+        $token = bin2hex(random_bytes(32));
+        $this->users->setRecoveryKeyHash($userId, password_hash($token, PASSWORD_DEFAULT));
         return [
             'recoveryCode' => $token,
-            'message' => "Mã khôi phục dự phòng của bạn là: {$token} (có hiệu lực 7 ngày). Hãy lưu lại để sử dụng khi cần đổi/khôi phục mật khẩu!",
+            'message' => 'Mã khôi phục mới đã được tạo. Lưu mã này ở nơi an toàn.',
         ];
     }
 
-    public function confirmPasswordReset(array $input): void
+    public function confirmPasswordReset(array $input): array
     {
-        $token = (string) ($input['token'] ?? '');
+        $accountId = trim((string) ($input['accountId'] ?? $input['userId'] ?? ''));
+        $recoveryKey = (string) ($input['recoveryKey'] ?? $input['token'] ?? '');
         $password = (string) ($input['password'] ?? '');
         $this->validatePassword($password);
-        $userId = $this->users->consumePasswordResetToken(hash('sha256', $token));
-        if ($userId === null) {
-            throw new ApiException('Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.', 400, 'INVALID_TOKEN');
+        if (!preg_match('/^[a-f0-9]{32,64}$/i', $accountId) && !preg_match('/^[a-f0-9-]{36}$/i', $accountId)) {
+            throw new ApiException('Mã tài khoản không hợp lệ.', 422, 'VALIDATION_ERROR');
         }
-        $this->users->updatePasswordAndInvalidateSessions(
-            $userId,
+        if (!$this->users->verifyRecoveryKey($accountId, $recoveryKey)) {
+            throw new ApiException('Mã tài khoản hoặc mã khôi phục không chính xác.', 400, 'INVALID_RECOVERY_KEY');
+        }
+        $newRecoveryCode = $this->users->resetPasswordWithRecoveryKey(
+            $accountId,
             password_hash($password, PASSWORD_BCRYPT),
         );
+        return ['recoveryCode' => $newRecoveryCode];
     }
 
     public function currentUser(array $user): array

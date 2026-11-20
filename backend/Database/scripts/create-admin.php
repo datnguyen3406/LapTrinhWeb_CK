@@ -41,7 +41,8 @@ try {
     if ($users->findByUsername($username)) {
         throw new RuntimeException('This username already belongs to an account; choose a new username.');
     }
-    $user = $users->create($username, $name, password_hash($password, PASSWORD_BCRYPT), true);
+    $created = $users->create($username, $name, password_hash($password, PASSWORD_BCRYPT), true);
+    $user = $created['user'];
     $users->setRole($user['id'], 'admin');
     fwrite(STDOUT, "Created the initial admin account '{$username}'.\n");
 } catch (Throwable $error) {

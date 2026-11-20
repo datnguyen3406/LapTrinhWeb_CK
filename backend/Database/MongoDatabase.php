@@ -99,6 +99,36 @@ final class MongoDatabase
         return ['file' => $file, 'content' => $content];
     }
 
+    public function writeFile(
+        string $database,
+        string $filename,
+        string $contentType,
+        string $content,
+        array $metadata = [],
+    ): string {
+        $id = new \MongoDB\BSON\ObjectId();
+        $length = strlen($content);
+        $now = new \MongoDB\BSON\UTCDateTime();
+        $this->insert($database, 'media.files', [
+            '_id' => $id,
+            'length' => $length,
+            'chunkSize' => 261120,
+            'uploadDate' => $now,
+            'filename' => $filename,
+            'metadata' => array_merge($metadata, ['contentType' => $contentType]),
+        ]);
+        $chunkSize = 261120;
+        for ($n = 0, $offset = 0; $offset < $length; $n++, $offset += $chunkSize) {
+            $chunk = substr($content, $offset, $chunkSize);
+            $this->insert($database, 'media.chunks', [
+                'files_id' => $id,
+                'n' => $n,
+                'data' => new \MongoDB\BSON\Binary($chunk, \MongoDB\BSON\Binary::TYPE_GENERIC),
+            ]);
+        }
+        return (string) $id;
+    }
+
     public static function objectId(string $value): \MongoDB\BSON\ObjectId
     {
         if (!preg_match('/^[a-f0-9]{24}$/i', $value)) {

@@ -17,7 +17,12 @@
     try {
       const result = await App.api.post("auth/register", { username, displayName, password });
       if (!result.user) throw new Error("Phản hồi đăng ký không hợp lệ.");
-      App.ui.showMessage(message, "Tạo tài khoản thành công. Bạn đã được đăng nhập.", "success");
+      if (!result.recoveryCode) throw new Error("Không nhận được mã khôi phục.");
+      App.ui.showMessage(
+        message,
+        `Tạo tài khoản thành công. Mã tài khoản: ${result.user.id}\nMã khôi phục: ${result.recoveryCode}\nHãy lưu cả hai ở nơi an toàn.`,
+        "success",
+      );
       window.setTimeout(() => window.location.assign(App.url("pages/index.html")), 700);
     } catch (error) {
       App.ui.showMessage(message, error.message);

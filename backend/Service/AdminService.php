@@ -56,7 +56,7 @@ final class AdminService
         if (!$target) {
             throw new ApiException('Không tìm thấy tài khoản.', 404, 'USER_NOT_FOUND');
         }
-        if (!$input || array_diff(array_keys($input), ['role', 'isLocked'])) {
+        if (!$input || array_diff(array_keys($input), ['role', 'isLocked', 'isActive'])) {
             throw new ApiException('Dữ liệu cập nhật tài khoản không hợp lệ.', 422, 'VALIDATION_ERROR');
         }
         if (array_key_exists('role', $input)) {
@@ -66,6 +66,9 @@ final class AdminService
         }
         if (array_key_exists('isLocked', $input) && !is_bool($input['isLocked'])) {
             throw new ApiException('Trạng thái khóa không hợp lệ.', 422, 'VALIDATION_ERROR');
+        }
+        if (array_key_exists('isActive', $input) && !is_bool($input['isActive'])) {
+            throw new ApiException('Trạng thái hoạt động không hợp lệ.', 422, 'VALIDATION_ERROR');
         }
 
         if (array_key_exists('role', $input)) {
@@ -90,13 +93,24 @@ final class AdminService
             }
             $this->users->setLocked($targetId, $input['isLocked']);
         }
+        if (array_key_exists('isActive', $input)) {
+            if ($actorId === $targetId && !$input['isActive']) {
+                throw new ApiException('Bạn không thể tự vô hiệu hóa tài khoản của mình.', 409, 'SELF_INACTIVE');
+            }
+            if ($target['role'] === 'admin' && !$input['isActive']
+                && (int) $target['is_locked'] === 0
+                && $this->users->activeAdminCount() <= 1) {
+                throw new ApiException('Không thể vô hiệu hóa quản trị viên hoạt động cuối cùng.', 409, 'LAST_ADMIN');
+            }
+            $this->users->setActive($targetId, $input['isActive']);
+        }
         $this->content->recordActivity(
             $actorId,
             'admin',
             'user.update',
             'user',
             $targetId,
-            array_intersect_key($input, array_flip(['role', 'isLocked'])),
+            array_intersect_key($input, array_flip(['role', 'isLocked', 'isActive'])),
         );
         return ['user' => self::publicUser($this->users->findById($targetId))];
     }

@@ -97,8 +97,11 @@ final class Kernel
             ));
         }
         if ($method === 'POST' && $path === 'auth/password-reset/confirm') {
-            $this->authService->confirmPasswordReset($request->body());
-            Response::success(['message' => 'Mật khẩu đã được cập nhật.']);
+            $result = $this->authService->confirmPasswordReset($request->body());
+            Response::success([
+                'message' => 'Mật khẩu đã được cập nhật.',
+                'recoveryCode' => $result['recoveryCode'],
+            ]);
         }
 
         if ($method === 'PATCH' && $path === 'me') {
@@ -172,6 +175,8 @@ final class Kernel
                 'q' => $request->query('q'),
                 'category' => $request->query('category'),
                 'source' => $request->query('source'),
+                'page' => $request->query('page'),
+                'limit' => $request->query('limit'),
             ]);
             $user = $this->auth->currentUser();
             if ($user) {
@@ -270,6 +275,10 @@ final class Kernel
             }
             Response::noContent();
         }
+        if ($method === 'POST' && $path === 'admin/media') {
+            $actor = $this->auth->requireAdmin();
+            Response::success($this->content->uploadMedia($request->file('media'), $actor['id']), 201);
+        }
         if ($method === 'POST' && $path === 'admin/articles') {
             $actor = $this->auth->requireAdmin();
             Response::success(['article' => $this->content->createArticle($request->body(), $actor['id'])], 201);
@@ -288,7 +297,6 @@ final class Kernel
             if (!$this->content->deleteArticle($articleId, $actor['id'])) {
                 throw new ApiException('Không tìm thấy bài viết.', 404, 'ARTICLE_NOT_FOUND');
             }
-            $this->readerRepository->deleteArticleReferences($articleId);
             Response::noContent();
         }
         if ($method === 'GET' && $path === 'admin/sources') {

@@ -23,6 +23,7 @@ final class AuthMiddleware
         $sessionVersion = $_SESSION['user_session_version'] ?? null;
         if (!$user
             || (int) $user['is_locked'] === 1
+            || (int) $user['is_active'] !== 1
             || !is_int($sessionVersion)
             || $sessionVersion !== (int) $user['session_version']) {
             unset($_SESSION['user_id'], $_SESSION['user_session_version']);
