@@ -45,7 +45,6 @@ try {
         fwrite(STDOUT, "Admin account already exists; skipped admin seed.\n");
     }
 
-    // 2. Seed MongoDB Categories & Sources
     try {
         $mongo = new MongoDatabase($env);
         $contentDb = $env['MONGODB_CONTENT_DB'] ?? 'news_content';
@@ -115,7 +114,6 @@ try {
             fwrite(STDOUT, "Seeded 2 default news sources.\n");
         }
 
-        // 3. Seed Sample Published Article if empty
         $articlesCount = $mongo->count($contentDb, 'articles', []);
         if ($articlesCount === 0 && !empty($categoryMap)) {
             $now = new \MongoDB\BSON\UTCDateTime();

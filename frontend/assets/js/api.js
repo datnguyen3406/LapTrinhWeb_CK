@@ -1,5 +1,4 @@
 (() => {
-  // PHP API responses use { data: ... }; errors use { error: { message, code } }.
   const scriptUrl = document.currentScript.src;
   const appRoot = new URL("../../", scriptUrl);
   const apiRoot = new URL("../api/", appRoot);
