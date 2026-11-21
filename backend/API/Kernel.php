@@ -142,15 +142,6 @@ final class Kernel
             $this->readerService->removeFavorite($this->auth->requireUser()['id'], strtolower($match[1]));
             Response::noContent();
         }
-        if ($method === 'GET' && $path === 'me/favorite-folders') {
-            Response::success($this->readerService->folders($this->auth->requireUser()['id']));
-        }
-        if ($method === 'POST' && $path === 'me/favorite-folders') {
-            Response::success($this->readerService->createFolder(
-                $this->auth->requireUser()['id'],
-                $request->body(),
-            ), 201);
-        }
         if ($method === 'GET' && $path === 'me/reading-history') {
             Response::success($this->readerService->history($this->auth->requireUser()['id']));
         }

@@ -4,7 +4,7 @@
   const codeGroup = document.getElementById("recovery-code-group");
   const passwordGroup = document.getElementById("recovery-password-group");
   const submit = document.getElementById("btn-verify-code");
-  const accountIdInput = document.getElementById("recovery-account-id");
+  const usernameInput = document.getElementById("recovery-username");
   const codeInput = document.getElementById("recovery-code");
   const passwordInput = document.getElementById("recovery-new-password");
   const confirmationInput = document.getElementById("recovery-confirm-password");
@@ -22,7 +22,7 @@
       const password = passwordInput.value;
       if (password !== confirmationInput.value) throw new Error("Mật khẩu xác nhận không khớp.");
       const result = await App.api.post("auth/password-reset/confirm", {
-        accountId: accountIdInput.value.trim(),
+        username: usernameInput.value.trim(),
         recoveryKey: codeInput.value.trim(),
         password,
       });

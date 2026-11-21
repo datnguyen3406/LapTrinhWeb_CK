@@ -125,7 +125,14 @@ try:
     check("TC-011 Tạo mã khôi phục mới", status == 200 and bool(new_recovery))
 
     status, payload = request(reader, "POST", "/auth/password-reset/confirm", {
-        "accountId": reader_id,
+        "username": username,
+        "recoveryKey": "ma-khoi-phuc-sai",
+        "password": password,
+    }, csrf(reader))
+    check("TC-011b Từ chối mã khôi phục sai", status == 400)
+
+    status, payload = request(reader, "POST", "/auth/password-reset/confirm", {
+        "username": username.upper(),
         "recoveryKey": new_recovery,
         "password": password,
     }, csrf(reader))
@@ -138,9 +145,9 @@ try:
     }, token)
     check("TC-012b Đăng nhập lại sau khôi phục mật khẩu", status == 200)
 
-    status, payload = request(reader, "POST", "/me/favorite-folders", {"name": "Kịch bản test"}, csrf(reader))
-    folder_id = data(payload).get("folder", {}).get("id")
-    check("TC-013 Tạo thư mục yêu thích", status == 201 and bool(folder_id))
+    status, payload = request(reader, "POST", "/me/favorite-folders",
+                              {"name": "Kịch bản test"}, csrf(reader))
+    check("TC-013 Không còn API tạo thư mục yêu thích", status == 404)
 
     _, public_payload = request(reader, "GET", "/articles")
     articles = data(public_payload).get("items", [])
@@ -150,11 +157,12 @@ try:
     if article_id:
         status, payload = request(reader, "POST", "/me/favorites", {
             "articleId": article_id,
-            "folderId": folder_id,
         }, csrf(reader))
         check("TC-015 Thêm bài vào yêu thích", status == 201)
         status, payload = request(reader, "GET", "/me/favorites")
-        check("TC-016 Đọc danh sách yêu thích", status == 200 and bool(data(payload).get("items")))
+        favorite_items = data(payload).get("items", [])
+        check("TC-016 Đọc danh sách yêu thích",
+              status == 200 and any(item.get("article", {}).get("id") == article_id for item in favorite_items))
 
         status, payload = request(reader, "POST", "/me/reading-history", {"articleId": article_id}, csrf(reader))
         check("TC-017 Ghi lịch sử đọc", status == 201)

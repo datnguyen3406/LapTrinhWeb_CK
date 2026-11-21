@@ -25,7 +25,7 @@
 | TC-003 | Công khai | Lọc theo danh mục | Chọn từng danh mục trên thanh điều hướng | Mobile, AI, Internet, TIN ICT, Khám phá | Danh sách được lọc theo danh mục | |
 | TC-004 | Công khai | Lọc theo nguồn | Chọn nguồn ở trang chủ | GenK, VnExpress Số Hóa | Chỉ bài của nguồn được chọn hiển thị | |
 | TC-005 | Công khai | Xem chi tiết bài | Nhấn tiêu đề bài | Bài đã xuất bản | Hiển thị tiêu đề, tóm tắt, nội dung, ảnh và/hoặc video | |
-| TC-006 | Đăng ký | Đăng ký hợp lệ | Mở Đăng ký, nhập đủ thông tin | Username 3-32 ký tự, mật khẩu >=8 ký tự | Tạo tài khoản Reader và hiển thị mã tài khoản/mã khôi phục | |
+| TC-006 | Đăng ký | Đăng ký hợp lệ | Mở Đăng ký, nhập đủ thông tin | Username 3-32 ký tự, mật khẩu >=8 ký tự | Tạo tài khoản Reader và hiển thị tên đăng nhập/mã khôi phục | |
 | TC-007 | Đăng ký | Trùng username | Đăng ký username đã tồn tại | Username vừa tạo ở TC-006 | Báo username đã được sử dụng | |
 | TC-008 | Đăng ký | Mật khẩu xác nhận sai | Nhập hai mật khẩu khác nhau | `Test@123456` / `Test@654321` | Không tạo tài khoản; báo hai mật khẩu không khớp | |
 | TC-009 | Đăng nhập | Đăng nhập sai | Nhập username/mật khẩu sai | Sai user và password | HTTP 401, thông báo không chính xác | |
@@ -38,12 +38,10 @@
 | TC-016 | Hồ sơ | Tạo mã khôi phục | Nhấn tạo mã khôi phục mới | Tài khoản Reader | Mã mới được hiển thị và lưu mã ở máy chủ dạng hash | |
 | TC-017 | Mật khẩu | Đổi mật khẩu hợp lệ | Nhập mật khẩu cũ/mới/xác nhận | `Test@123456` -> `Reader@654321` | Đổi thành công | |
 | TC-018 | Mật khẩu | Sai mật khẩu hiện tại | Nhập mật khẩu cũ sai | Mật khẩu sai | Không đổi; báo lỗi | |
-| TC-019 | Mật khẩu | Khôi phục bằng mã | Dùng account ID và recovery code mới | Mã khôi phục mới | Đặt lại được mật khẩu | |
-| TC-020 | Yêu thích | Thêm yêu thích | Mở bài và nhấn lưu | Bài đã xuất bản | Bài xuất hiện trong mục yêu thích | |
-| TC-021 | Yêu thích | Tạo thư mục yêu thích | Tạo thư mục mới | `Kịch bản test` | Thư mục xuất hiện trong danh sách | |
-| TC-022 | Yêu thích | Thêm bài vào thư mục | Chọn thư mục và lưu bài | Thư mục vừa tạo | Bài nằm đúng thư mục | |
-| TC-023 | Yêu thích | Bỏ yêu thích | Nhấn bỏ khỏi yêu thích | Bài vừa lưu | Bài bị loại khỏi danh sách | |
-| TC-024 | Yêu thích | Trùng tên thư mục | Tạo lại tên thư mục đã có | `Kịch bản test` | Báo thư mục đã tồn tại | |
+| TC-019 | Mật khẩu | Khôi phục bằng mã | Dùng tên đăng nhập và mã khôi phục mới | Mã khôi phục mới | Đặt lại được mật khẩu | |
+| TC-020 | Yêu thích | Thêm yêu thích | Mở bài và nhấn lưu | Bài đã xuất bản | Bài xuất hiện trong danh sách yêu thích | |
+| TC-021 | Yêu thích | Xem yêu thích | Mở trang Yêu thích | Tài khoản có bài đã lưu | Hiển thị các bài đã lưu | |
+| TC-022 | Yêu thích | Bỏ yêu thích | Nhấn bỏ khỏi yêu thích | Bài vừa lưu | Bài bị loại khỏi danh sách | |
 | TC-025 | Lịch sử | Ghi lịch sử đọc | Mở chi tiết bài khi đã đăng nhập | Bài đã xuất bản | Bài được ghi vào lịch sử đọc | |
 | TC-026 | Lịch sử | Xem lịch sử | Mở trang Reader | Tài khoản có lịch sử | Danh sách hiển thị theo lần đọc mới nhất | |
 | TC-027 | Lịch sử | Xóa lịch sử | Nhấn xóa lịch sử đọc và xác nhận | Tài khoản Reader | Danh sách lịch sử trống | |

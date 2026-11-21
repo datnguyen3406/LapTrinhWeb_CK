@@ -5,6 +5,22 @@
   const sourceSelect = document.getElementById("admin-article-source");
   const visibleCheck = document.getElementById("admin-article-visible");
   const field = (id) => document.getElementById(id);
+  const contentPreview = field("admin-article-content-preview");
+  let existingImageMedia = [];
+
+  function renderContentPreview() {
+    const content = field("admin-article-content").value;
+    if (!content.trim() && existingImageMedia.length === 0) {
+      App.ui.renderState(contentPreview, "Bản xem trước nội dung sẽ xuất hiện ở đây.");
+      return;
+    }
+    App.articleContent.render(
+      contentPreview,
+      content,
+      field("admin-article-title").value,
+      existingImageMedia,
+    );
+  }
 
   function fillOptions(select, items, placeholder) {
     select.replaceChildren();
@@ -60,15 +76,21 @@
         categorySelect.value = article.categoryId || "";
         sourceSelect.value = article.sourceId || "";
         field("admin-article-summary").value = article.summary || "";
-        field("admin-article-content").value = article.content || "";
+        existingImageMedia = (article.media || []).filter((item) => item.type === "image");
+        const content = article.content || "";
+        field("admin-article-content").value = existingImageMedia.reduce(
+          (current, item) => current.includes(item.url)
+            ? current
+            : `${current}${current.trim() ? "\n\n" : ""}${item.url}`,
+          content,
+        );
         field("admin-article-cover-url").value =
           article.thumbnailUrl?.startsWith("http") ? article.thumbnailUrl : "";
         field("admin-article-cover-file").value = "";
-        field("admin-article-image-urls").value =
-          (article.media || []).filter((item) => item.type === "image").map((item) => item.url).join("\n");
         field("admin-article-video-urls").value =
           (article.media || []).filter((item) => item.type === "video").map((item) => item.url).join("\n");
         field("admin-article-video-file").value = "";
+        renderContentPreview();
         if (visibleCheck) visibleCheck.checked = Boolean(article.visible);
         field("btn-save-article").textContent = "Cập nhật bài báo";
         form.scrollIntoView({ behavior: "smooth" });
@@ -179,6 +201,9 @@
       visible: visibleCheck ? visibleCheck.checked : true,
       media: [],
     };
+    for (const media of existingImageMedia) {
+      if (article.content.includes(media.url)) article.media.push(media);
+    }
     const coverFile = field("admin-article-cover-file").files[0];
     const videoFile = field("admin-article-video-file").files[0];
     try {
@@ -191,9 +216,6 @@
       } else {
         const coverUrlValue = field("admin-article-cover-url").value.trim();
         if (coverUrlValue) article.coverImageUrl = coverUrlValue;
-      }
-      for (const url of mediaLines("admin-article-image-urls")) {
-        article.media.push({ type: "image", url });
       }
       for (const url of mediaLines("admin-article-video-urls")) {
         article.media.push({ type: "video", url });
@@ -208,9 +230,11 @@
       if (id) await App.api.patch(`admin/articles/${encodeURIComponent(id)}`, article);
       else await App.api.post("admin/articles", article);
       form.reset();
+      existingImageMedia = [];
       field("admin-article-id").value = "";
       if (visibleCheck) visibleCheck.checked = true;
       field("btn-save-article").textContent = "Lưu bài báo";
+      renderContentPreview();
       await loadArticles();
       App.ui.toast(id ? "Đã cập nhật bài báo." : "Đã đăng bài báo thành công!", "success");
     } catch (error) {
@@ -221,10 +245,17 @@
   });
 
   document.getElementById("btn-reset-article").addEventListener("click", () => {
+    form.reset();
+    existingImageMedia = [];
     field("admin-article-id").value = "";
     if (visibleCheck) visibleCheck.checked = true;
     field("btn-save-article").textContent = "Lưu bài báo";
+    renderContentPreview();
   });
+
+  field("admin-article-content").addEventListener("input", renderContentPreview);
+  field("admin-article-title").addEventListener("input", renderContentPreview);
+  renderContentPreview();
 
   App.auth.requireUser("admin").then(async (user) => {
     if (!user) return;

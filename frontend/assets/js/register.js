@@ -20,7 +20,7 @@
       if (!result.recoveryCode) throw new Error("Không nhận được mã khôi phục.");
       App.ui.showMessage(
         message,
-        `Tạo tài khoản thành công. Mã tài khoản: ${result.user.id}\nMã khôi phục: ${result.recoveryCode}\nHãy lưu cả hai ở nơi an toàn.`,
+        `Tạo tài khoản thành công. Tên đăng nhập: ${result.user.username}\nMã khôi phục: ${result.recoveryCode}\nHãy lưu mã khôi phục ở nơi an toàn.`,
         "success",
       );
       window.setTimeout(() => window.location.assign(App.url("pages/index.html")), 700);

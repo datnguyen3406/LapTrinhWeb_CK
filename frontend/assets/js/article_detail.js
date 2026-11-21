@@ -2,8 +2,7 @@
   const container = document.getElementById("article-detail-container");
   const state = document.getElementById("article-state");
   const articleId = new URLSearchParams(window.location.search).get("id");
-  const addButton = document.getElementById("btn-add-to-folder");
-  const folderSelect = document.getElementById("favorite-folder");
+  const addButton = document.getElementById("btn-toggle-favorite");
 
   async function loadArticle() {
     if (!articleId) {
@@ -30,29 +29,12 @@
         ? new Date(article.publishedAt).toLocaleDateString("vi-VN")
         : "";
       document.getElementById("article-summary").textContent = article.summary || "";
-      document.getElementById("article-content").textContent = article.content || "";
-      const contentMedia = document.createElement("div");
-      contentMedia.className = "article-media-list";
-      for (const media of Array.isArray(article.media) ? article.media : []) {
-        if (media.type === "image") {
-          const url = App.safeUrl(media.url || "");
-          if (!url) continue;
-          const image = document.createElement("img");
-          image.src = url;
-          image.alt = article.title || "";
-          image.loading = "lazy";
-          contentMedia.append(image);
-        } else if (media.type === "video") {
-          const url = App.safeUrl(media.url || "");
-          if (!url) continue;
-          const video = document.createElement("video");
-          video.src = url;
-          video.controls = true;
-          video.preload = "metadata";
-          contentMedia.append(video);
-        }
-      }
-      document.getElementById("article-content").append(contentMedia);
+      App.articleContent.render(
+        document.getElementById("article-content"),
+        article.content,
+        article.title || "",
+        article.media,
+      );
 
       const thumbnail = document.getElementById("article-thumbnail");
       thumbnail.replaceChildren();
@@ -69,17 +51,6 @@
       state.hidden = true;
       addButton.textContent = article.isFavorite ? "Đã lưu yêu thích" : "Thêm vào yêu thích";
       addButton.dataset.saved = String(Boolean(article.isFavorite));
-      try {
-        const folders = await App.api.get("me/favorite-folders");
-        for (const folder of folders.items) {
-          const option = document.createElement("option");
-          option.value = folder.id;
-          option.textContent = folder.name;
-          folderSelect.append(option);
-        }
-      } catch (error) {
-        if (error.status !== 401 && error.status !== 0) App.ui.toast(error.message, "error");
-      }
       App.api.post("me/reading-history", { articleId: article.id }).catch((error) => {
         if (error.status !== 401 && error.status !== 0) App.ui.toast(error.message, "error");
       });
@@ -98,10 +69,7 @@
         addButton.textContent = "Thêm vào yêu thích";
         App.ui.toast("Đã bỏ bài báo khỏi yêu thích.", "success");
       } else {
-        await App.api.post("me/favorites", {
-          articleId: container.dataset.articleId,
-          folderId: folderSelect.value || null,
-        });
+        await App.api.post("me/favorites", { articleId: container.dataset.articleId });
         addButton.dataset.saved = "true";
         addButton.textContent = "Đã lưu yêu thích";
         App.ui.toast("Đã lưu bài báo vào mục yêu thích.", "success");

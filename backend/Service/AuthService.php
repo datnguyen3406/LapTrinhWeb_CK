@@ -92,18 +92,17 @@ final class AuthService
 
     public function confirmPasswordReset(array $input): array
     {
-        $accountId = trim((string) ($input['accountId'] ?? $input['userId'] ?? ''));
+        $username = strtolower(trim((string) ($input['username'] ?? '')));
         $recoveryKey = (string) ($input['recoveryKey'] ?? $input['token'] ?? '');
         $password = (string) ($input['password'] ?? '');
+        $this->validateUsername($username);
         $this->validatePassword($password);
-        if (!preg_match('/^[a-f0-9]{32,64}$/i', $accountId) && !preg_match('/^[a-f0-9-]{36}$/i', $accountId)) {
-            throw new ApiException('Mã tài khoản không hợp lệ.', 422, 'VALIDATION_ERROR');
-        }
-        if (!$this->users->verifyRecoveryKey($accountId, $recoveryKey)) {
-            throw new ApiException('Mã tài khoản hoặc mã khôi phục không chính xác.', 400, 'INVALID_RECOVERY_KEY');
+        $user = $this->users->findByUsername($username);
+        if (!$user || !$this->users->verifyRecoveryKey($user['id'], $recoveryKey)) {
+            throw new ApiException('Tên đăng nhập hoặc mã khôi phục không chính xác.', 400, 'INVALID_RECOVERY_KEY');
         }
         $newRecoveryCode = $this->users->resetPasswordWithRecoveryKey(
-            $accountId,
+            $user['id'],
             password_hash($password, PASSWORD_BCRYPT),
         );
         return ['recoveryCode' => $newRecoveryCode];

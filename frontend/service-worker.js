@@ -1,4 +1,4 @@
-const SHELL_CACHE = "genk-shell-v12";
+const SHELL_CACHE = "genk-shell-v17";
 const API_CACHE = "genk-private-v12";
 const APP_ROOT = new URL("./", self.location.href);
 const SHELL_FILES = [
@@ -20,6 +20,7 @@ const SHELL_FILES = [
   "assets/css/style.css",
   "assets/js/api.js",
   "assets/js/index.js",
+  "assets/js/article_content.js",
   "assets/js/article_detail.js",
   "assets/js/auth.js",
   "assets/js/register.js",
@@ -83,8 +84,7 @@ self.addEventListener("fetch", (event) => {
     if (endpoint === "auth/me"
       || endpoint === "articles"
       || endpoint.startsWith("articles/")
-      || endpoint === "me/favorites"
-      || endpoint === "me/favorite-folders") {
+      || endpoint === "me/favorites") {
       event.respondWith(networkFirstApi(request));
       return;
     }

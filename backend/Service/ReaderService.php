@@ -30,7 +30,7 @@ final class ReaderService
             if (isset($articles[$id])) {
                 $article = $articles[$id];
                 $article['isFavorite'] = true;
-                $items[] = ['article' => $article, 'folderId' => $favorite['folder_id']];
+                $items[] = ['article' => $article];
             } else {
                 // Tự động dọn bản ghi mồ côi nếu bài báo bên Mongo đã bị xóa hoặc ẩn
                 $this->reader->removeFavorite($userId, $id);
@@ -45,13 +45,7 @@ final class ReaderService
         if (!$this->content->article($articleId)) {
             throw new ApiException('Không tìm thấy bài báo đang hiển thị.', 404, 'ARTICLE_NOT_FOUND');
         }
-        $folderId = isset($input['folderId']) && $input['folderId'] !== ''
-            ? (string) $input['folderId']
-            : null;
-        if ($folderId !== null && !$this->reader->ownsFolder($userId, $folderId)) {
-            throw new ApiException('Không tìm thấy thư mục yêu thích.', 404, 'FOLDER_NOT_FOUND');
-        }
-        $this->reader->addFavorite($userId, $articleId, $folderId);
+        $this->reader->addFavorite($userId, $articleId);
         $this->content->recordActivity($userId, 'reader', 'bookmark.add', 'article', $articleId);
     }
 
@@ -59,27 +53,6 @@ final class ReaderService
     {
         $this->reader->removeFavorite($userId, $this->articleId($articleId));
         $this->content->recordActivity($userId, 'reader', 'bookmark.remove', 'article', $articleId);
-    }
-
-    public function folders(string $userId): array
-    {
-        return ['items' => $this->reader->folders($userId)];
-    }
-
-    public function createFolder(string $userId, array $input): array
-    {
-        $name = trim((string) ($input['name'] ?? ''));
-        if ($name === '' || mb_strlen($name) > 80) {
-            throw new ApiException('Tên thư mục phải từ 1 đến 80 ký tự.', 422, 'VALIDATION_ERROR');
-        }
-        try {
-            return ['folder' => $this->reader->createFolder($userId, $name)];
-        } catch (\PDOException $error) {
-            if (str_contains(strtolower($error->getMessage()), 'unique')) {
-                throw new ApiException('Tên thư mục đã được sử dụng.', 409, 'FOLDER_EXISTS');
-            }
-            throw $error;
-        }
     }
 
     public function history(string $userId): array

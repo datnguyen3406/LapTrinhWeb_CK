@@ -60,21 +60,18 @@
         <time id="article-date" class="article-date"></time>
       </div>
 
-      <div id="article-thumbnail" class="article-thumbnail"></div>
+      <div id="article-thumbnail" class="article-thumbnail-frame"></div>
       <p id="article-summary" class="article-summary"></p>
       <div id="article-content" class="article-content"></div>
 
       <div id="article-actions" class="article-actions">
-        <label for="favorite-folder">Thư mục yêu thích</label>
-        <select id="favorite-folder">
-          <option value="">Mặc định</option>
-        </select>
-        <button type="button" id="btn-add-to-folder">Thêm vào thư mục yêu thích</button>
+        <button type="button" id="btn-toggle-favorite">Thêm vào yêu thích</button>
       </div>
     </article>
   </main>
 
   <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/article_content.js"></script>
   <script src="../assets/js/article_detail.js"></script>
 </body>
 </html>
