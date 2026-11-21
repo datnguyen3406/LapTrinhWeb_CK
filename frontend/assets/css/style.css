@@ -879,6 +879,22 @@ body > header:not(.site-header) > a:hover {
   white-space: pre-wrap;
 }
 
+.article-media-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+  white-space: normal;
+}
+
+.article-media-list img,
+.article-media-list video {
+  width: 100%;
+  max-height: 520px;
+  border-radius: 12px;
+  background: var(--surface-raised);
+  object-fit: contain;
+}
+
 #article-actions {
   display: flex;
   margin-top: 12px;

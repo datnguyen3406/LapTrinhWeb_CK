@@ -31,6 +31,28 @@
         : "";
       document.getElementById("article-summary").textContent = article.summary || "";
       document.getElementById("article-content").textContent = article.content || "";
+      const contentMedia = document.createElement("div");
+      contentMedia.className = "article-media-list";
+      for (const media of Array.isArray(article.media) ? article.media : []) {
+        if (media.type === "image") {
+          const url = App.safeUrl(media.url || "");
+          if (!url) continue;
+          const image = document.createElement("img");
+          image.src = url;
+          image.alt = article.title || "";
+          image.loading = "lazy";
+          contentMedia.append(image);
+        } else if (media.type === "video") {
+          const url = App.safeUrl(media.url || "");
+          if (!url) continue;
+          const video = document.createElement("video");
+          video.src = url;
+          video.controls = true;
+          video.preload = "metadata";
+          contentMedia.append(video);
+        }
+      }
+      document.getElementById("article-content").append(contentMedia);
 
       const thumbnail = document.getElementById("article-thumbnail");
       thumbnail.replaceChildren();

@@ -249,6 +249,8 @@ final class MongoContentRepository
                 throw new ApiException('Không tìm thấy ảnh bìa.', 422, 'INVALID_REFERENCE');
             }
         }
+        $coverImageUrl = $this->externalMediaUrl($input['coverImageUrl'] ?? '');
+        $media = $this->articleMedia($input['media'] ?? []);
         $id = $this->mongo->insert($this->contentDb, 'articles', [
             'title' => $title,
             'slug' => $slug,
@@ -258,7 +260,10 @@ final class MongoContentRepository
             'category_ids' => $categoryIds,
             'source_id' => $sourceId,
             'author_name' => null,
-            'cover_image' => $coverMediaId ? ['file_id' => $coverMediaId] : null,
+            'cover_image' => $coverMediaId
+                ? ['file_id' => $coverMediaId]
+                : ($coverImageUrl !== null ? ['url' => $coverImageUrl] : null),
+            'media' => $media,
             'status' => $visible ? 'published' : 'draft',
             'published_at' => $visible ? $now : null,
             'created_by' => $actorId,
@@ -317,6 +322,13 @@ final class MongoContentRepository
                 throw new ApiException('Không tìm thấy ảnh bìa.', 422, 'INVALID_REFERENCE');
             }
             $changes['cover_image'] = $coverMediaId ? ['file_id' => $coverMediaId] : null;
+        }
+        if (array_key_exists('coverImageUrl', $input)) {
+            $coverImageUrl = $this->externalMediaUrl($input['coverImageUrl']);
+            $changes['cover_image'] = $coverImageUrl !== null ? ['url' => $coverImageUrl] : null;
+        }
+        if (array_key_exists('media', $input)) {
+            $changes['media'] = $this->articleMedia($input['media']);
         }
         if (array_key_exists('visible', $input)) {
             if (!is_bool($input['visible'])) {
@@ -448,8 +460,19 @@ final class MongoContentRepository
         );
         $items = array_map(fn (object $item): array => self::normalize($item), $items);
         return array_values(array_filter($items, static function (array $item) use ($filters): bool {
-            if (!empty($filters['action']) && ($item['action'] ?? '') !== $filters['action']) {
-                return false;
+            if (!empty($filters['action'])) {
+                $action = (string) ($item['action'] ?? '');
+                $actionFilter = (string) $filters['action'];
+                if ($actionFilter === 'create'
+                    || $actionFilter === 'update'
+                    || $actionFilter === 'archive'
+                ) {
+                    if (!str_ends_with($action, '.' . $actionFilter)) {
+                        return false;
+                    }
+                } elseif ($action !== $actionFilter) {
+                    return false;
+                }
             }
             if (!empty($filters['date']) && !str_starts_with((string) ($item['created_at'] ?? ''), $filters['date'])) {
                 return false;
@@ -467,6 +490,45 @@ final class MongoContentRepository
     public function deleteActivityLogs(): void
     {
         $this->mongo->delete($this->auditDb, 'activity_logs', [], true);
+    }
+
+    private function externalMediaUrl(mixed $value): ?string
+    {
+        $url = trim((string) $value);
+        if ($url === '') {
+            return null;
+        }
+        if (str_starts_with($url, '/api/media/')) {
+            return $url;
+        }
+        $parts = parse_url($url);
+        if (!is_array($parts)
+            || !isset($parts['scheme'], $parts['host'])
+            || !in_array(strtolower($parts['scheme']), ['http', 'https'], true)
+            || mb_strlen($url) > 2048
+        ) {
+            throw new ApiException('Đường dẫn media không hợp lệ.', 422, 'INVALID_MEDIA_URL');
+        }
+        return $url;
+    }
+
+    private function articleMedia(mixed $value): array
+    {
+        if (!is_array($value)) {
+            throw new ApiException('Danh sách media không hợp lệ.', 422, 'INVALID_MEDIA');
+        }
+        $media = [];
+        foreach ($value as $item) {
+            if (!is_array($item) || !isset($item['type'], $item['url'])) {
+                continue;
+            }
+            $type = $item['type'] === 'video' ? 'video' : 'image';
+            $url = $this->externalMediaUrl($item['url']);
+            if ($url !== null) {
+                $media[] = ['type' => $type, 'url' => $url];
+            }
+        }
+        return array_slice($media, 0, 20);
     }
 
     public function recordActivity(
@@ -507,8 +569,11 @@ final class MongoContentRepository
             throw new ApiException('Tệp media vượt quá dung lượng cho phép.', 413, 'UPLOAD_TOO_LARGE');
         }
         $mime = (new \finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);
-        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
-            throw new ApiException('Chỉ chấp nhận ảnh JPEG, PNG hoặc WebP.', 415, 'UNSUPPORTED_MEDIA_TYPE');
+        if (!in_array($mime, [
+            'image/jpeg', 'image/png', 'image/webp',
+            'video/mp4', 'video/webm', 'video/ogg',
+        ], true)) {
+            throw new ApiException('Chỉ chấp nhận ảnh JPEG, PNG, WebP hoặc video MP4, WebM, Ogg.', 415, 'UNSUPPORTED_MEDIA_TYPE');
         }
         $content = file_get_contents($upload['tmp_name']);
         if ($content === false) {
@@ -632,13 +697,18 @@ final class MongoContentRepository
                 $normalized['content'],
             )));
         }
-        $image = $normalized['cover_image']['file_id'] ?? null;
+        $coverImage = $normalized['cover_image'] ?? null;
+        $image = $coverImage['file_id'] ?? null;
+        $thumbnailUrl = $image
+            ? '/api/media/' . $image
+            : ($coverImage['url'] ?? null);
         return [
             'id' => $normalized['id'],
             'title' => $normalized['title'] ?? '',
             'summary' => $normalized['summary'] ?? '',
             'content' => $content,
-            'thumbnailUrl' => $image ? '/api/media/' . $image : null,
+            'thumbnailUrl' => $thumbnailUrl,
+            'media' => $normalized['media'] ?? [],
             'category' => $category,
             'categoryId' => $category['id'] ?? null,
             'source' => $source ? $source['name'] : null,

@@ -1,5 +1,5 @@
 (() => {
-  const tbody = document.getElementById("admin-history-tbody");
+  const tbody = document.getElementById("history-table-body");
   const filterBar = document.getElementById("history-filter-bar");
 
   function cell(row, value) {

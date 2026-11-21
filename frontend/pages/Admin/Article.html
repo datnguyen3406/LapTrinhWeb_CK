@@ -58,6 +58,30 @@
                 <textarea id="admin-article-summary" name="summary" class="form-control" rows="2" placeholder="Tóm tắt ngắn gọn nội dung bài viết..."></textarea>
               </div>
 
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="admin-article-cover-file" class="font-weight-bold">Tải ảnh bìa</label>
+                  <input type="file" id="admin-article-cover-file" class="form-control-file" accept="image/jpeg,image/png,image/webp" />
+                  <small class="form-text text-muted">JPEG, PNG hoặc WebP.</small>
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="admin-article-cover-url" class="font-weight-bold">Hoặc dán URL ảnh bìa</label>
+                  <input type="url" id="admin-article-cover-url" class="form-control" placeholder="https://..." />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="admin-article-image-urls" class="font-weight-bold">URL ảnh trong bài</label>
+                  <textarea id="admin-article-image-urls" class="form-control" rows="3" placeholder="Mỗi đường dẫn ảnh trên một dòng"></textarea>
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="admin-article-video-urls" class="font-weight-bold">URL video trong bài</label>
+                  <textarea id="admin-article-video-urls" class="form-control" rows="3" placeholder="Mỗi đường dẫn video MP4/WebM trên một dòng"></textarea>
+                  <input type="file" id="admin-article-video-file" class="form-control-file mt-2" accept="video/mp4,video/webm,video/ogg" />
+                </div>
+              </div>
+
               <div class="form-group">
                 <label for="admin-article-content" class="font-weight-bold">Nội dung bài báo <span class="text-danger">*</span></label>
                 <textarea id="admin-article-content" name="content" class="form-control" rows="8" placeholder="Dán hoặc nhập nội dung chi tiết bài báo ở đây..." required></textarea>
@@ -66,7 +90,7 @@
               <div class="form-group form-check">
                 <input type="checkbox" class="form-check-input" id="admin-article-visible" checked />
                 <label class="form-check-label font-weight-bold text-success" for="admin-article-visible">
-                  Xuất bản ngay (Hiển thị ngay ra trang chủ & danh mục)
+                  Xuất bản ngay
                 </label>
               </div>
 

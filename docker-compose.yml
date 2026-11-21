@@ -14,7 +14,7 @@ services:
       MONGODB_URI: mongodb://mongo:27017
       MONGODB_CONTENT_DB: news_content
       MONGODB_AUDIT_DB: news_audit
-      UPLOAD_MAX_BYTES: 5242880
+      UPLOAD_MAX_BYTES: 52428800
     ports:
       - "8000:8000"
     volumes:

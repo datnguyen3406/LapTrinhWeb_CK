@@ -82,11 +82,12 @@ final class AdminService
             }
             $this->users->setRole($targetId, $input['role']);
         }
+        $resultingRole = $input['role'] ?? $target['role'];
         if (array_key_exists('isLocked', $input)) {
             if ($actorId === $targetId && $input['isLocked']) {
                 throw new ApiException('Bạn không thể tự khóa tài khoản của mình.', 409, 'SELF_LOCK');
             }
-            if ($target['role'] === 'admin' && $input['isLocked']
+            if ($resultingRole === 'admin' && $input['isLocked']
                 && (int) $target['is_active'] === 1 && (int) $target['is_locked'] === 0
                 && $this->users->activeAdminCount() <= 1) {
                 throw new ApiException('Không thể khóa quản trị viên hoạt động cuối cùng.', 409, 'LAST_ADMIN');
@@ -97,7 +98,7 @@ final class AdminService
             if ($actorId === $targetId && !$input['isActive']) {
                 throw new ApiException('Bạn không thể tự vô hiệu hóa tài khoản của mình.', 409, 'SELF_INACTIVE');
             }
-            if ($target['role'] === 'admin' && !$input['isActive']
+            if ($resultingRole === 'admin' && !$input['isActive']
                 && (int) $target['is_locked'] === 0
                 && $this->users->activeAdminCount() <= 1) {
                 throw new ApiException('Không thể vô hiệu hóa quản trị viên hoạt động cuối cùng.', 409, 'LAST_ADMIN');

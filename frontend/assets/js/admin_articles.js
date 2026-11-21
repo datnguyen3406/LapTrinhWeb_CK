@@ -61,6 +61,14 @@
         sourceSelect.value = article.sourceId || "";
         field("admin-article-summary").value = article.summary || "";
         field("admin-article-content").value = article.content || "";
+        field("admin-article-cover-url").value =
+          article.thumbnailUrl?.startsWith("http") ? article.thumbnailUrl : "";
+        field("admin-article-cover-file").value = "";
+        field("admin-article-image-urls").value =
+          (article.media || []).filter((item) => item.type === "image").map((item) => item.url).join("\n");
+        field("admin-article-video-urls").value =
+          (article.media || []).filter((item) => item.type === "video").map((item) => item.url).join("\n");
+        field("admin-article-video-file").value = "";
         if (visibleCheck) visibleCheck.checked = Boolean(article.visible);
         field("btn-save-article").textContent = "Cập nhật bài báo";
         form.scrollIntoView({ behavior: "smooth" });
@@ -135,6 +143,29 @@
     }
   }
 
+  function mediaLines(id) {
+    return field(id).value
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }
+
+  async function uploadArticleMedia(file, kind) {
+    if (!file) return null;
+    const allowedImages = new Set(["image/jpeg", "image/png", "image/webp"]);
+    const allowedVideos = new Set(["video/mp4", "video/webm", "video/ogg"]);
+    const allowed = kind === "video" ? allowedVideos : allowedImages;
+    if (!allowed.has(file.type)) {
+      throw new Error(kind === "video"
+        ? "Video phải có định dạng MP4, WebM hoặc Ogg."
+        : "Ảnh bìa phải là JPEG, PNG hoặc WebP.");
+    }
+    const data = new FormData();
+    data.append("media", file);
+    const uploaded = await App.api.upload("admin/media", data);
+    return uploaded.url || null;
+  }
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     App.ui.setBusy(form, true, "Đang lưu bài báo...");
@@ -146,7 +177,33 @@
       summary: field("admin-article-summary").value.trim(),
       content: field("admin-article-content").value.trim(),
       visible: visibleCheck ? visibleCheck.checked : true,
+      media: [],
     };
+    const coverFile = field("admin-article-cover-file").files[0];
+    const videoFile = field("admin-article-video-file").files[0];
+    try {
+      const [coverUrl, videoUrl] = await Promise.all([
+        uploadArticleMedia(coverFile, "image"),
+        uploadArticleMedia(videoFile, "video"),
+      ]);
+      if (coverUrl) {
+        article.coverMediaId = coverUrl.match(/\/api\/media\/([a-f0-9]{24})$/i)?.[1] || null;
+      } else {
+        const coverUrlValue = field("admin-article-cover-url").value.trim();
+        if (coverUrlValue) article.coverImageUrl = coverUrlValue;
+      }
+      for (const url of mediaLines("admin-article-image-urls")) {
+        article.media.push({ type: "image", url });
+      }
+      for (const url of mediaLines("admin-article-video-urls")) {
+        article.media.push({ type: "video", url });
+      }
+      if (videoUrl) article.media.push({ type: "video", url: videoUrl });
+    } catch (error) {
+      App.ui.toast(error.message, "error");
+      App.ui.setBusy(form, false);
+      return;
+    }
     try {
       if (id) await App.api.patch(`admin/articles/${encodeURIComponent(id)}`, article);
       else await App.api.post("admin/articles", article);
