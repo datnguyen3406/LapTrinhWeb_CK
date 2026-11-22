@@ -136,7 +136,7 @@ try {
 
     $indexes = [
         [$contentDb, 'articles', [
-            ['key' => ['slug' => 1], 'name' => 'uq_articles_slug', 'unique' => true, 'sparse' => true],
+            ['key' => ['slug' => 1], 'name' => 'uq_articles_slug', 'unique' => true],
             ['key' => ['status' => 1, 'published_at' => -1], 'name' => 'idx_articles_publication'],
             ['key' => ['category_ids' => 1, 'status' => 1, 'published_at' => -1], 'name' => 'idx_articles_category_publication'],
             ['key' => ['source_id' => 1, 'status' => 1, 'published_at' => -1], 'name' => 'idx_articles_source_publication'],

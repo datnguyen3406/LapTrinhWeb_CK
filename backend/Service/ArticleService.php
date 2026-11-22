@@ -34,7 +34,11 @@ final class ArticleService
         $summary = isset($input['summary']) ? trim((string) $input['summary']) : null;
         $categoryId = !empty($input['category_id']) ? (string) $input['category_id'] : (!empty($input['categoryId']) ? (string) $input['categoryId'] : null);
         $sourceId = !empty($input['source_id']) ? (string) $input['source_id'] : (!empty($input['sourceId']) ? (string) $input['sourceId'] : null);
-        $thumbnailUrl = !empty($input['thumbnail_url']) ? (string) $input['thumbnail_url'] : (!empty($input['thumbnailUrl']) ? (string) $input['thumbnailUrl'] : null);
+        $thumbnailUrl = !empty($input['thumbnail_url'])
+            ? (string) $input['thumbnail_url']
+            : (!empty($input['thumbnailUrl'])
+                ? (string) $input['thumbnailUrl']
+                : (!empty($input['coverImageUrl']) ? (string) $input['coverImageUrl'] : null));
 
         $blocks = $input['blocks'] ?? [];
         if (!is_array($blocks) || empty($blocks)) {
@@ -50,7 +54,9 @@ final class ArticleService
         }
 
         $plainText = self::extractPlainText($blocks);
-        $shouldPublish = !empty($input['publish']) || ($input['status'] ?? '') === 'published';
+        $shouldPublish = !empty($input['publish'])
+            || ($input['status'] ?? '') === 'published'
+            || ($input['visible'] ?? false) === true;
 
         // SAGA STEP 1: Insert SQLite metadata as PENDING
         $meta = $this->articles->create([
@@ -68,7 +74,13 @@ final class ArticleService
 
         // SAGA STEP 2: Write MongoDB content blocks
         try {
-            $this->content->saveContent($articleId, $blocks, $plainText);
+            $this->content->saveContent(
+                $articleId,
+                $blocks,
+                $plainText,
+                is_array($input['media'] ?? null) ? $input['media'] : [],
+                $thumbnailUrl,
+            );
         } catch (Throwable $e) {
             $this->articles->setStatus($articleId, 'DRAFT', 'FAILED');
             try {
@@ -119,6 +131,7 @@ final class ArticleService
             'id' => $articleId,
             'blocks' => $blocks,
             'content' => $plainText,
+            'visible' => $newPubStatus === 'PUBLISHED',
         ]);
     }
 
@@ -185,10 +198,35 @@ final class ArticleService
                 throw new ApiException('Blocks nội dung không hợp lệ.', 422, 'VALIDATION_ERROR');
             }
             $plainText = self::extractPlainText($blocks);
-            $this->content->saveContent($articleId, $blocks, $plainText);
+            $this->content->saveContent(
+                $articleId,
+                $blocks,
+                $plainText,
+                is_array($input['media'] ?? null) ? $input['media'] : [],
+                array_key_exists('thumbnailUrl', $input)
+                    ? ($input['thumbnailUrl'] ?: null)
+                    : (array_key_exists('coverImageUrl', $input) ? ($input['coverImageUrl'] ?: null) : null),
+            );
         }
 
         // Publication status change
+        if (array_key_exists('visible', $input)) {
+            if (!is_bool($input['visible'])) {
+                throw new ApiException('Trạng thái hiển thị không hợp lệ.', 422, 'VALIDATION_ERROR');
+            }
+            $newStatus = $input['visible'] ? 'PUBLISHED' : 'HIDDEN';
+            if ($newStatus === 'PUBLISHED') {
+                $verifyResult = $this->integrity->verify($articleId);
+                if ($verifyResult['status'] !== 'PASS') {
+                    throw new ApiException(
+                        'Không thể xuất bản bài viết chưa đầy đủ nội dung hoặc lỗi kiểm tra.',
+                        422,
+                        'ARTICLE_NOT_READY',
+                    );
+                }
+            }
+            $data['publication_status'] = $newStatus;
+        }
         if (isset($input['status']) || isset($input['publication_status'])) {
             $newStatus = strtoupper((string) ($input['status'] ?? $input['publication_status']));
             if ($newStatus === 'PUBLISHED') {
@@ -224,6 +262,7 @@ final class ArticleService
             'id' => $articleId,
             'blocks' => $content['blocks'] ?? [],
             'content' => $content['content_plain_text'] ?? '',
+            'visible' => $updated['publication_status'] === 'PUBLISHED',
         ]);
     }
 
@@ -254,7 +293,9 @@ final class ArticleService
             'new_status' => $status,
         ]);
 
-        return $updated ?? [];
+        return array_merge($updated ?? [], [
+            'visible' => ($updated['publication_status'] ?? '') === 'PUBLISHED',
+        ]);
     }
 
     public function deleteArticle(string $articleId, string $actorId, bool $permanent = false): void
@@ -293,6 +334,7 @@ final class ArticleService
             'summary' => $meta['summary'],
             'content' => $content['content_plain_text'] ?? '',
             'blocks' => $content['blocks'] ?? [],
+            'media' => $content['media'] ?? [],
             'thumbnailUrl' => $meta['thumbnail_url'],
             'publishedAt' => $meta['published_at'],
             'category' => $meta['category_name'] ? [

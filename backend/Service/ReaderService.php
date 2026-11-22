@@ -7,6 +7,7 @@ use App\API\Http\ApiException;
 use App\Database\ArticlesRepository;
 use App\Database\MongoContentRepository;
 use App\Database\ReaderRepository;
+use Throwable;
 
 final class ReaderService
 {
@@ -140,6 +141,17 @@ final class ReaderService
     {
         $articleId = $this->articleId($input['articleId'] ?? '');
         $this->reader->addHistory($userId, $articleId);
+        try {
+            $this->content->recordActivity(
+                $userId,
+                'reader',
+                'history.read',
+                'article',
+                $articleId,
+            );
+        } catch (Throwable) {
+            // Lịch sử đọc vẫn được lưu trong SQLite nếu MongoDB tạm thời không khả dụng.
+        }
     }
 
     public function createCategory(string $userId, array $input): array

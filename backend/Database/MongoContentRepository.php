@@ -775,17 +775,30 @@ class MongoContentRepository
             && in_array($scheme, ['http', 'https'], true);
     }
 
-    public function saveContent(string $articleId, array $blocks, string $plainText): void
+    public function saveContent(
+        string $articleId,
+        array $blocks,
+        string $plainText,
+        array $media = [],
+        ?string $coverImageUrl = null,
+    ): void
     {
         $id = preg_match('/^[a-f0-9]{24}$/i', $articleId)
             ? MongoDatabase::objectId($articleId)
             : $articleId;
 
         $doc = [
+            'slug' => $articleId,
             'blocks' => $blocks,
             'content_plain_text' => $plainText,
-            'updated_at' => gmdate('Y-m-d\TH:i:s\Z'),
+            'updated_at' => new \MongoDB\BSON\UTCDateTime(),
         ];
+        if (!empty($media)) {
+            $doc['media'] = $media;
+        }
+        if ($coverImageUrl) {
+            $doc['cover_image'] = ['url' => $coverImageUrl];
+        }
 
         $existing = $this->mongo->find($this->contentDb, 'articles', ['_id' => $id], ['limit' => 1]);
         if (!empty($existing)) {
@@ -814,6 +827,7 @@ class MongoContentRepository
             '_id' => (string) ($doc['_id'] ?? $articleId),
             'blocks' => self::normalize($doc['blocks'] ?? []),
             'content_plain_text' => (string) ($doc['content_plain_text'] ?? ($doc['content'] ?? '')),
+            'media' => is_array($doc['media'] ?? null) ? $doc['media'] : [],
             'updated_at' => (string) ($doc['updated_at'] ?? ''),
         ];
     }

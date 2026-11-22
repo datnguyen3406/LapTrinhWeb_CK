@@ -103,7 +103,10 @@ final class CategoriesRepository
 
     public function articleCountByCategory(string $categoryId): int
     {
-        $stmt = $this->pdo->prepare('SELECT COUNT(*) FROM articles WHERE category_id = ?');
+        $stmt = $this->pdo->prepare(
+            "SELECT COUNT(*) FROM articles
+             WHERE category_id = ? AND publication_status != 'DELETED'",
+        );
         $stmt->execute([$categoryId]);
         return (int) $stmt->fetchColumn();
     }

@@ -409,7 +409,13 @@ final class TestMongoContentRepository extends MongoContentRepository
     {
     }
 
-    public function saveContent(string $articleId, array $blocks, string $plainText): void
+    public function saveContent(
+        string $articleId,
+        array $blocks,
+        string $plainText,
+        array $media = [],
+        ?string $coverImageUrl = null,
+    ): void
     {
         $this->storage[$articleId] = [
             '_id' => $articleId,
