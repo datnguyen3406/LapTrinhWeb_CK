@@ -71,6 +71,14 @@ final class SqliteDatabase
                 'Migrate accounts to usernames',
                 require $root . '/Database/migrations/004_username_accounts.php',
             ],
+            5 => [
+                'Article metadata, categories and synchronization status',
+                require $root . '/Database/migrations/005_articles_and_categories.php',
+            ],
+            6 => [
+                'Fix bookmarks and reading history article_id constraints',
+                require $root . '/Database/migrations/006_fix_bookmarks_and_history.php',
+            ],
         ];
         $migration = $this->pdo->prepare('SELECT 1 FROM schema_migrations WHERE version = ?');
         $insert = $this->pdo->prepare(

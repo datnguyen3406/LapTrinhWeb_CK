@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\API\Http\ApiException;
+use App\Database\ArticlesRepository;
+use App\Database\CategoriesRepository;
 use App\Database\MongoContentRepository;
 use App\Database\UsersRepository;
 
@@ -12,14 +14,27 @@ final class AdminService
     public function __construct(
         private readonly UsersRepository $users,
         private readonly MongoContentRepository $content,
+        private readonly ?ArticlesRepository $articles = null,
+        private readonly ?CategoriesRepository $categories = null,
+        private readonly ?ArticleIntegrityService $integrity = null,
     ) {
     }
 
     public function dashboard(): array
     {
+        $mongoCounts = [];
+        try {
+            $mongoCounts = $this->content->dashboardCounts();
+        } catch (\Throwable) {
+            // MongoDB may be offline
+        }
+
         return [
             'usersCount' => $this->users->count(),
-            ...$this->content->dashboardCounts(),
+            'articlesCount' => $this->articles ? $this->articles->count() : ($mongoCounts['articlesCount'] ?? 0),
+            'publishedArticlesCount' => $this->articles ? $this->articles->count(['status' => 'PUBLISHED']) : ($mongoCounts['publishedArticlesCount'] ?? 0),
+            'categoriesCount' => $this->categories ? $this->categories->count() : ($mongoCounts['categoriesCount'] ?? 0),
+            ...$mongoCounts,
         ];
     }
 
@@ -116,8 +131,27 @@ final class AdminService
         return ['user' => self::publicUser($this->users->findById($targetId))];
     }
 
+    public function reconciliationReport(): array
+    {
+        if (!$this->integrity) {
+            return [];
+        }
+        return $this->integrity->reconcile();
+    }
+
+    public function checkArticleIntegrity(string $articleId): array
+    {
+        if (!$this->integrity) {
+            return ['status' => 'UNKNOWN', 'reason' => 'Integrity service not initialized'];
+        }
+        return $this->integrity->verify($articleId);
+    }
+
     public function articleList(): array
     {
+        if ($this->articles) {
+            return ['items' => $this->articles->listAdmin()];
+        }
         return ['items' => $this->content->adminArticles()];
     }
 

@@ -27,23 +27,15 @@ try {
         [$contentDb, 'articles', [
             '$jsonSchema' => [
                 'bsonType' => 'object',
-                'required' => [
-                    'title', 'slug', 'summary', 'content', 'content_plain_text',
-                    'category_ids', 'status', 'created_by', 'updated_by', 'created_at', 'updated_at',
-                ],
+                'required' => ['updated_at'],
                 'properties' => [
-                    'title' => ['bsonType' => 'string', 'minLength' => 1, 'maxLength' => 250],
-                    'slug' => ['bsonType' => 'string', 'minLength' => 1, 'maxLength' => 300],
-                    'summary' => ['bsonType' => 'string', 'maxLength' => 1000],
+                    'blocks' => ['bsonType' => 'array'],
                     'content' => ['bsonType' => 'array'],
                     'content_plain_text' => ['bsonType' => 'string'],
-                    'category_ids' => ['bsonType' => 'array', 'items' => ['bsonType' => 'objectId']],
-                    'source_id' => ['bsonType' => ['objectId', 'null']],
-                    'status' => ['enum' => ['draft', 'published', 'archived']],
-                    'published_at' => ['bsonType' => ['date', 'null']],
-                    'created_by' => ['bsonType' => 'string'],
-                    'updated_by' => ['bsonType' => 'string'],
-                    'created_at' => ['bsonType' => 'date'],
+                    'title' => ['bsonType' => 'string'],
+                    'slug' => ['bsonType' => 'string'],
+                    'summary' => ['bsonType' => 'string'],
+                    'status' => ['bsonType' => 'string'],
                     'updated_at' => ['bsonType' => 'date'],
                 ],
             ],
@@ -144,7 +136,7 @@ try {
 
     $indexes = [
         [$contentDb, 'articles', [
-            ['key' => ['slug' => 1], 'name' => 'uq_articles_slug', 'unique' => true],
+            ['key' => ['slug' => 1], 'name' => 'uq_articles_slug', 'unique' => true, 'sparse' => true],
             ['key' => ['status' => 1, 'published_at' => -1], 'name' => 'idx_articles_publication'],
             ['key' => ['category_ids' => 1, 'status' => 1, 'published_at' => -1], 'name' => 'idx_articles_category_publication'],
             ['key' => ['source_id' => 1, 'status' => 1, 'published_at' => -1], 'name' => 'idx_articles_source_publication'],

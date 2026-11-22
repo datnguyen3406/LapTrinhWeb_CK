@@ -12,6 +12,6 @@ final class ApiException extends RuntimeException
         public readonly int $status = 400,
         public readonly string $errorCode = 'BAD_REQUEST',
     ) {
-        parent::__construct($message);
+        parent::__construct($message, $status);
     }
 }

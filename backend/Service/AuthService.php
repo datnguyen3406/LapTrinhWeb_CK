@@ -40,7 +40,9 @@ final class AuthService
             throw $error;
         }
 
-        session_regenerate_id(true);
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_session_version'] = (int) $user['session_version'];
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -65,7 +67,9 @@ final class AuthService
         if ((int) $user['is_active'] !== 1) {
             throw new ApiException('Tài khoản đã bị vô hiệu hóa.', 403, 'ACCOUNT_INACTIVE');
         }
-        session_regenerate_id(true);
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_session_version'] = (int) $user['session_version'];
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -74,9 +78,13 @@ final class AuthService
 
     public function requestPasswordReset(string $username): array
     {
+        $user = $this->users->findByUsername($username);
+        if (!$user) {
+            throw new ApiException('Không tìm thấy tài khoản.', 404, 'USER_NOT_FOUND');
+        }
         return [
-            'success' => false,
-            'message' => 'Khôi phục mật khẩu cần mã khôi phục cá nhân. Không còn mã đặt lại công khai.',
+            'success' => true,
+            'message' => 'Vui lòng sử dụng mã khôi phục cá nhân của bạn để đặt lại mật khẩu.',
         ];
     }
 
@@ -93,8 +101,8 @@ final class AuthService
     public function confirmPasswordReset(array $input): array
     {
         $username = strtolower(trim((string) ($input['username'] ?? '')));
-        $recoveryKey = (string) ($input['recoveryKey'] ?? $input['token'] ?? '');
-        $password = (string) ($input['password'] ?? '');
+        $recoveryKey = (string) ($input['recoveryKey'] ?? $input['recoveryCode'] ?? $input['resetCode'] ?? $input['token'] ?? '');
+        $password = (string) ($input['password'] ?? $input['newPassword'] ?? '');
         $this->validateUsername($username);
         $this->validatePassword($password);
         $user = $this->users->findByUsername($username);

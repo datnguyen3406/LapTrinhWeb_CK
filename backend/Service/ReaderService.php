@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\API\Http\ApiException;
+use App\Database\ArticlesRepository;
 use App\Database\MongoContentRepository;
 use App\Database\ReaderRepository;
 
@@ -12,6 +13,7 @@ final class ReaderService
     public function __construct(
         private readonly ReaderRepository $reader,
         private readonly MongoContentRepository $content,
+        private readonly ?ArticlesRepository $articles = null,
     ) {
     }
 
@@ -21,6 +23,31 @@ final class ReaderService
         if (empty($favorites)) {
             return ['items' => []];
         }
+
+        if ($this->articles) {
+            $items = [];
+            foreach ($favorites as $favorite) {
+                $id = $favorite['article_id'];
+                $art = $this->articles->findById($id);
+                if ($art && $art['publication_status'] === 'PUBLISHED') {
+                    $items[] = [
+                        'id' => $art['article_id'],
+                        'article' => [
+                            'id' => $art['article_id'],
+                            'title' => $art['title'],
+                            'slug' => $art['slug'],
+                            'summary' => $art['summary'],
+                            'thumbnailUrl' => $art['thumbnail_url'],
+                            'isFavorite' => true,
+                        ],
+                    ];
+                } else {
+                    $this->reader->removeFavorite($userId, $id);
+                }
+            }
+            return ['items' => $items];
+        }
+
         $articleIds = array_column($favorites, 'article_id');
         $articles = $this->content->articlesByIds($articleIds, true);
 
@@ -30,9 +57,8 @@ final class ReaderService
             if (isset($articles[$id])) {
                 $article = $articles[$id];
                 $article['isFavorite'] = true;
-                $items[] = ['article' => $article];
+                $items[] = ['id' => $id, 'article' => $article];
             } else {
-                // Tự động dọn bản ghi mồ côi nếu bài báo bên Mongo đã bị xóa hoặc ẩn
                 $this->reader->removeFavorite($userId, $id);
             }
         }
@@ -42,33 +68,69 @@ final class ReaderService
     public function addFavorite(string $userId, array $input): void
     {
         $articleId = $this->articleId($input['articleId'] ?? '');
-        if (!$this->content->article($articleId)) {
+        if ($this->articles) {
+            $art = $this->articles->findById($articleId);
+            if (!$art || $art['publication_status'] !== 'PUBLISHED') {
+                throw new ApiException('Không tìm thấy bài báo đang hiển thị.', 404, 'ARTICLE_NOT_FOUND');
+            }
+        } elseif (!$this->content->article($articleId)) {
             throw new ApiException('Không tìm thấy bài báo đang hiển thị.', 404, 'ARTICLE_NOT_FOUND');
         }
+
         $this->reader->addFavorite($userId, $articleId);
-        $this->content->recordActivity($userId, 'reader', 'bookmark.add', 'article', $articleId);
+        try {
+            $this->content->recordActivity($userId, 'reader', 'bookmark.add', 'article', $articleId);
+        } catch (\Throwable) {
+        }
     }
 
     public function removeFavorite(string $userId, string $articleId): void
     {
-        $this->reader->removeFavorite($userId, $this->articleId($articleId));
-        $this->content->recordActivity($userId, 'reader', 'bookmark.remove', 'article', $articleId);
+        $articleId = $this->articleId($articleId);
+        $this->reader->removeFavorite($userId, $articleId);
+        try {
+            $this->content->recordActivity($userId, 'reader', 'bookmark.remove', 'article', $articleId);
+        } catch (\Throwable) {
+        }
     }
 
     public function history(string $userId): array
     {
-        $entries = $this->reader->history($userId);
-        if (empty($entries)) {
+        $rows = $this->reader->history($userId);
+        if (empty($rows)) {
             return ['items' => []];
         }
-        $articleIds = array_column($entries, 'article_id');
-        $articles = $this->content->articlesByIds($articleIds, true);
 
+        if ($this->articles) {
+            $items = [];
+            foreach ($rows as $row) {
+                $id = $row['article_id'];
+                $art = $this->articles->findById($id);
+                if ($art && $art['publication_status'] === 'PUBLISHED') {
+                    $items[] = [
+                        'article' => [
+                            'id' => $art['article_id'],
+                            'title' => $art['title'],
+                            'slug' => $art['slug'],
+                            'summary' => $art['summary'],
+                        ],
+                        'viewedAt' => $row['viewed_at'] ?? null,
+                    ];
+                }
+            }
+            return ['items' => $items];
+        }
+
+        $articleIds = array_column($rows, 'article_id');
+        $articles = $this->content->articlesByIds($articleIds, false);
         $items = [];
-        foreach ($entries as $entry) {
-            $id = $entry['article_id'];
+        foreach ($rows as $row) {
+            $id = $row['article_id'];
             if (isset($articles[$id])) {
-                $items[] = ['article' => $articles[$id], 'readAt' => $entry['read_at']];
+                $items[] = [
+                    'article' => $articles[$id],
+                    'viewedAt' => $row['viewed_at'],
+                ];
             }
         }
         return ['items' => $items];
@@ -77,21 +139,17 @@ final class ReaderService
     public function addHistory(string $userId, array $input): void
     {
         $articleId = $this->articleId($input['articleId'] ?? '');
-        if (!$this->content->article($articleId)) {
-            throw new ApiException('Không tìm thấy bài báo đang hiển thị.', 404, 'ARTICLE_NOT_FOUND');
-        }
         $this->reader->addHistory($userId, $articleId);
-        $this->content->recordActivity($userId, 'reader', 'history.read', 'article', $articleId);
     }
 
     public function createCategory(string $userId, array $input): array
     {
         $name = trim((string) ($input['name'] ?? ''));
-        if ($name === '' || mb_strlen($name) > 80) {
-            throw new ApiException('Tên phân loại phải từ 1 đến 80 ký tự.', 422, 'VALIDATION_ERROR');
+        if ($name === '' || mb_strlen($name) > 60) {
+            throw new ApiException('Tên phân loại không hợp lệ.', 422, 'VALIDATION_ERROR');
         }
         try {
-            return ['category' => $this->reader->createCategory($userId, $name)];
+            return $this->reader->createCategory($userId, $name);
         } catch (\PDOException $error) {
             if (str_contains(strtolower($error->getMessage()), 'unique')) {
                 throw new ApiException('Tên phân loại đã tồn tại.', 409, 'CATEGORY_EXISTS');
@@ -103,7 +161,7 @@ final class ReaderService
     private function articleId(mixed $value): string
     {
         $id = (string) $value;
-        if (!preg_match('/^[a-f0-9]{24}$/i', $id)) {
+        if (!preg_match('/^[a-f0-9]{24}$|^[a-f0-9-]{36}$/i', $id)) {
             throw new ApiException('Mã bài báo không hợp lệ.', 422, 'INVALID_ID');
         }
         return strtolower($id);

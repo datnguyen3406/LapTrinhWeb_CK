@@ -5,7 +5,7 @@ namespace App\Database;
 
 use App\API\Http\ApiException;
 
-final class MongoContentRepository
+class MongoContentRepository
 {
     private string $contentDb;
     private string $auditDb;
@@ -773,5 +773,71 @@ final class MongoContentRepository
         $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
         return filter_var($value, FILTER_VALIDATE_URL) !== false
             && in_array($scheme, ['http', 'https'], true);
+    }
+
+    public function saveContent(string $articleId, array $blocks, string $plainText): void
+    {
+        $id = preg_match('/^[a-f0-9]{24}$/i', $articleId)
+            ? MongoDatabase::objectId($articleId)
+            : $articleId;
+
+        $doc = [
+            'blocks' => $blocks,
+            'content_plain_text' => $plainText,
+            'updated_at' => gmdate('Y-m-d\TH:i:s\Z'),
+        ];
+
+        $existing = $this->mongo->find($this->contentDb, 'articles', ['_id' => $id], ['limit' => 1]);
+        if (!empty($existing)) {
+            $this->mongo->update($this->contentDb, 'articles', ['_id' => $id], $doc);
+        } else {
+            $doc['_id'] = $id;
+            $this->mongo->insert($this->contentDb, 'articles', $doc);
+        }
+    }
+
+    public function getContent(string $articleId): ?array
+    {
+        $id = preg_match('/^[a-f0-9]{24}$/i', $articleId)
+            ? MongoDatabase::objectId($articleId)
+            : $articleId;
+
+        $docs = $this->mongo->find($this->contentDb, 'articles', ['_id' => $id], ['limit' => 1]);
+        if (empty($docs) && is_object($id)) {
+            $docs = $this->mongo->find($this->contentDb, 'articles', ['_id' => $articleId], ['limit' => 1]);
+        }
+        if (empty($docs)) {
+            return null;
+        }
+        $doc = (array) $docs[0];
+        return [
+            '_id' => (string) ($doc['_id'] ?? $articleId),
+            'blocks' => self::normalize($doc['blocks'] ?? []),
+            'content_plain_text' => (string) ($doc['content_plain_text'] ?? ($doc['content'] ?? '')),
+            'updated_at' => (string) ($doc['updated_at'] ?? ''),
+        ];
+    }
+
+    public function deleteContent(string $articleId): bool
+    {
+        $id = preg_match('/^[a-f0-9]{24}$/i', $articleId)
+            ? MongoDatabase::objectId($articleId)
+            : $articleId;
+
+        $deleted = $this->mongo->delete($this->contentDb, 'articles', ['_id' => $id]);
+        if ($deleted === 0 && is_object($id)) {
+            $deleted = $this->mongo->delete($this->contentDb, 'articles', ['_id' => $articleId]);
+        }
+        return $deleted > 0;
+    }
+
+    public function allContentIds(): array
+    {
+        $items = $this->mongo->find($this->contentDb, 'articles', [], ['projection' => ['_id' => 1]]);
+        $ids = [];
+        foreach ($items as $item) {
+            $ids[] = (string) $item->_id;
+        }
+        return $ids;
     }
 }

@@ -6,6 +6,8 @@ namespace App\API;
 use App\API\Http\ApiException;
 use App\API\Http\Request;
 use App\API\Http\Response;
+use App\Database\ArticlesRepository;
+use App\Database\CategoriesRepository;
 use App\Database\MongoContentRepository;
 use App\Database\MongoDatabase;
 use App\Database\ReaderRepository;
@@ -14,14 +16,24 @@ use App\Database\UsersRepository;
 use App\Middleware\AuthMiddleware;
 use App\Service\AccountService;
 use App\Service\AdminService;
+use App\Service\ArticleIntegrityService;
+use App\Service\ArticleService;
+use App\Service\AuditLogService;
 use App\Service\AuthService;
+use App\Service\CategoryService;
 use App\Service\ReaderService;
 
 final class Kernel
 {
     private UsersRepository $users;
     private ReaderRepository $readerRepository;
+    private CategoriesRepository $categoriesRepository;
+    private ArticlesRepository $articlesRepository;
     private MongoContentRepository $content;
+    private ArticleIntegrityService $integrityService;
+    private AuditLogService $auditLogService;
+    private CategoryService $categoryService;
+    private ArticleService $articleService;
     private AuthMiddleware $auth;
     private AuthService $authService;
     private AccountService $accountService;
@@ -34,7 +46,18 @@ final class Kernel
         $database = new SqliteDatabase($backendRoot);
         $this->users = new UsersRepository($database->pdo());
         $this->readerRepository = new ReaderRepository($database->pdo());
+        $this->categoriesRepository = new CategoriesRepository($database->pdo());
+        $this->articlesRepository = new ArticlesRepository($database->pdo());
         $this->content = new MongoContentRepository(new MongoDatabase($environment), $environment);
+        $this->integrityService = new ArticleIntegrityService($this->articlesRepository, $this->content);
+        $this->auditLogService = new AuditLogService($this->content);
+        $this->categoryService = new CategoryService($this->categoriesRepository);
+        $this->articleService = new ArticleService(
+            $this->articlesRepository,
+            $this->content,
+            $this->integrityService,
+            $this->auditLogService,
+        );
         $this->auth = new AuthMiddleware($this->users);
         $this->authService = new AuthService($this->users, $backendRoot);
         $this->accountService = new AccountService(
@@ -43,8 +66,14 @@ final class Kernel
             $backendRoot . '/store/uploads/avatars',
             max(1, (int) ($environment['UPLOAD_MAX_BYTES'] ?? 5242880)),
         );
-        $this->readerService = new ReaderService($this->readerRepository, $this->content);
-        $this->adminService = new AdminService($this->users, $this->content);
+        $this->readerService = new ReaderService($this->readerRepository, $this->content, $this->articlesRepository);
+        $this->adminService = new AdminService(
+            $this->users,
+            $this->content,
+            $this->articlesRepository,
+            $this->categoriesRepository,
+            $this->integrityService,
+        );
     }
 
     public function dispatch(Request $request): never
@@ -138,7 +167,7 @@ final class Kernel
             $this->readerService->addFavorite($this->auth->requireUser()['id'], $request->body());
             Response::success(['saved' => true], 201);
         }
-        if ($method === 'DELETE' && preg_match('#^me/favorites/([a-f0-9]{24})$#i', $path, $match)) {
+        if ($method === 'DELETE' && preg_match('#^me/favorites/([a-f0-9-]+)$#i', $path, $match)) {
             $this->readerService->removeFavorite($this->auth->requireUser()['id'], strtolower($match[1]));
             Response::noContent();
         }
@@ -162,13 +191,14 @@ final class Kernel
         }
 
         if ($method === 'GET' && $path === 'articles') {
-            $items = $this->content->publicArticles([
+            $response = $this->articleService->listPublicArticles([
                 'q' => $request->query('q'),
                 'category' => $request->query('category'),
                 'source' => $request->query('source'),
                 'page' => $request->query('page'),
                 'limit' => $request->query('limit'),
             ]);
+            $items = $response['items'];
             $user = $this->auth->currentUser();
             if ($user) {
                 $favoriteIds = array_column($this->readerRepository->favorites($user['id']), 'article_id');
@@ -177,17 +207,18 @@ final class Kernel
                 }
                 unset($item);
             }
-            Response::success(['items' => $items, 'featured' => $items[0] ?? null]);
+            Response::success([
+                'items' => $items,
+                'featured' => $response['featured'] ?? ($items[0] ?? null),
+                'total' => $response['total'] ?? count($items),
+            ]);
         }
-        if ($method === 'GET' && preg_match('#^articles/([a-f0-9]{24})$#i', $path, $match)) {
-            $article = $this->content->article(strtolower($match[1]));
-            if (!$article) {
-                throw new ApiException('Không tìm thấy bài báo.', 404, 'ARTICLE_NOT_FOUND');
-            }
+        if ($method === 'GET' && preg_match('#^articles/([a-z0-9-]+)$#i', $path, $match)) {
+            $article = $this->articleService->getPublicArticle($match[1]);
             $user = $this->auth->currentUser();
             if ($user) {
                 $article['isFavorite'] = in_array(
-                    strtolower($match[1]),
+                    $article['id'],
                     array_column($this->readerRepository->favorites($user['id']), 'article_id'),
                     true,
                 );
@@ -195,7 +226,7 @@ final class Kernel
             Response::success(['article' => $article]);
         }
         if ($method === 'GET' && $path === 'categories') {
-            Response::success(['items' => $this->content->categories()]);
+            Response::success(['items' => $this->categoryService->list()]);
         }
         if ($method === 'GET' && $path === 'sources') {
             Response::success(['items' => $this->content->sources()]);
@@ -204,6 +235,14 @@ final class Kernel
         if ($method === 'GET' && $path === 'admin/dashboard') {
             $this->auth->requireAdmin();
             Response::success($this->adminService->dashboard());
+        }
+        if ($method === 'GET' && $path === 'admin/reconciliation') {
+            $this->auth->requireAdmin();
+            Response::success($this->adminService->reconciliationReport());
+        }
+        if ($method === 'GET' && preg_match('#^admin/articles/([a-z0-9-]+)/integrity$#i', $path, $match)) {
+            $this->auth->requireAdmin();
+            Response::success($this->adminService->checkArticleIntegrity($match[1]));
         }
         if ($method === 'GET' && $path === 'admin/users') {
             $this->auth->requireAdmin();
@@ -231,39 +270,30 @@ final class Kernel
         }
         if ($method === 'GET' && $path === 'admin/articles') {
             $this->auth->requireAdmin();
-            Response::success($this->adminService->articleList());
+            Response::success($this->articleService->listAdminArticles([
+                'q' => $request->query('q'),
+                'status' => $request->query('status'),
+                'page' => $request->query('page'),
+                'limit' => $request->query('limit'),
+            ]));
         }
         if ($method === 'GET' && $path === 'admin/categories') {
             $this->auth->requireAdmin();
-            Response::success(['items' => $this->content->categories(true)]);
+            Response::success(['items' => $this->categoryService->list(true)]);
         }
         if ($method === 'POST' && $path === 'admin/categories') {
-            $actor = $this->auth->requireAdmin();
+            $this->auth->requireAdmin();
             Response::success([
-                'category' => $this->content->createCategory($request->body(), $actor['id']),
+                'category' => $this->categoryService->create($request->body()),
             ], 201);
         }
-        if ($method === 'PATCH' && preg_match('#^admin/categories/([a-f0-9]{24})$#i', $path, $match)) {
-            $actor = $this->auth->requireAdmin();
-            $category = $this->content->updateCategory(
-                strtolower($match[1]),
-                $request->body(),
-                $actor['id'],
-            );
-            if (!$category) {
-                throw new ApiException('Không tìm thấy danh mục.', 404, 'CATEGORY_NOT_FOUND');
-            }
-            Response::success(['category' => $category]);
+        if ($method === 'PATCH' && preg_match('#^admin/categories/([a-z0-9-]+)$#i', $path, $match)) {
+            $this->auth->requireAdmin();
+            Response::success(['category' => $this->categoryService->update($match[1], $request->body())]);
         }
-        if ($method === 'DELETE' && preg_match('#^admin/categories/([a-f0-9]{24})$#i', $path, $match)) {
-            $actor = $this->auth->requireAdmin();
-            if (!$this->content->updateCategory(
-                strtolower($match[1]),
-                ['isActive' => false],
-                $actor['id'],
-            )) {
-                throw new ApiException('Không tìm thấy danh mục.', 404, 'CATEGORY_NOT_FOUND');
-            }
+        if ($method === 'DELETE' && preg_match('#^admin/categories/([a-z0-9-]+)$#i', $path, $match)) {
+            $this->auth->requireAdmin();
+            $this->categoryService->delete($match[1]);
             Response::noContent();
         }
         if ($method === 'POST' && $path === 'admin/media') {
@@ -272,22 +302,18 @@ final class Kernel
         }
         if ($method === 'POST' && $path === 'admin/articles') {
             $actor = $this->auth->requireAdmin();
-            Response::success(['article' => $this->content->createArticle($request->body(), $actor['id'])], 201);
+            Response::success(['article' => $this->articleService->createArticle($request->body(), $actor['id'])], 201);
         }
-        if ($method === 'PATCH' && preg_match('#^admin/articles/([a-f0-9]{24})$#i', $path, $match)) {
+        if ($method === 'PATCH' && preg_match('#^admin/articles/([a-z0-9-]+)$#i', $path, $match)) {
             $actor = $this->auth->requireAdmin();
-            $article = $this->content->updateArticle(strtolower($match[1]), $request->body(), $actor['id']);
-            if (!$article) {
-                throw new ApiException('Không tìm thấy bài viết.', 404, 'ARTICLE_NOT_FOUND');
-            }
+            $article = $this->articleService->updateArticle($match[1], $request->body(), $actor['id']);
             Response::success(['article' => $article]);
         }
-        if ($method === 'DELETE' && preg_match('#^admin/articles/([a-f0-9]{24})$#i', $path, $match)) {
+        if ($method === 'DELETE' && preg_match('#^admin/articles/([a-z0-9-]+)$#i', $path, $match)) {
             $actor = $this->auth->requireAdmin();
-            $articleId = strtolower($match[1]);
-            if (!$this->content->deleteArticle($articleId, $actor['id'])) {
-                throw new ApiException('Không tìm thấy bài viết.', 404, 'ARTICLE_NOT_FOUND');
-            }
+            $articleId = $match[1];
+            $isPermanent = $request->query('permanent') === 'true' || $request->query('permanent') === '1';
+            $this->articleService->deleteArticle($articleId, $actor['id'], $isPermanent);
             Response::noContent();
         }
         if ($method === 'GET' && $path === 'admin/sources') {
