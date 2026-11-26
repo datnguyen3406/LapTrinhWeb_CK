@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Genk Magazine - Full Automated Test Suite
- * Covers SQL-*, MGO-*, INTS-*, ART-*, AUTH-*, USER-*, FAV-*, CAT-*, LOG-*, API-*, SEC-*, XSS-*.
- */
 
 require_once __DIR__ . '/../Database/Environment.php';
 require_once __DIR__ . '/../Database/SqliteDatabase.php';

@@ -10,7 +10,8 @@
     const query = search.value.trim().toLocaleLowerCase();
     const category = categoryFilter.value;
     const visible = sources.filter((source) =>
-      source.name.toLocaleLowerCase().includes(query)
+      source.isActive !== false
+      && source.name.toLocaleLowerCase().includes(query)
       && (!category || source.category === category));
     list.replaceChildren();
     if (!visible.length) {
@@ -69,7 +70,8 @@
     button.disabled = true;
     try {
       await App.api.delete(`admin/sources/${encodeURIComponent(id)}`);
-      await loadSources();
+      sources = sources.filter((source) => source.id !== id);
+      renderSources();
       App.ui.toast("Đã xóa nguồn báo.", "success");
     } catch (error) {
       App.ui.toast(error.message, "error");

@@ -334,7 +334,9 @@ final class Kernel
         }
         if ($method === 'DELETE' && preg_match('#^admin/sources/([a-f0-9]{24})$#i', $path, $match)) {
             $actor = $this->auth->requireAdmin();
-            if (!$this->content->updateSource(strtolower($match[1]), ['isActive' => false], $actor['id'])) {
+            $sourceId = strtolower($match[1]);
+            if (!$this->content->deleteSource($sourceId, $actor['id'])
+                && !$this->content->updateSource($sourceId, ['isActive' => false], $actor['id'])) {
                 throw new ApiException('Không tìm thấy nguồn báo.', 404, 'SOURCE_NOT_FOUND');
             }
             Response::noContent();

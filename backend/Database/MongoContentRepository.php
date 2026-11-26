@@ -442,6 +442,20 @@ class MongoContentRepository
         return $items ? $this->formatSource($items[0]) : null;
     }
 
+    public function deleteSource(string $id, string $actorId): bool
+    {
+        $deleted = $this->mongo->delete(
+            $this->contentDb,
+            'news_sources',
+            ['_id' => MongoDatabase::objectId($id)],
+        );
+        if ($deleted > 0) {
+            $this->recordActivity($actorId, 'admin', 'source.delete', 'source', $id);
+            return true;
+        }
+        return false;
+    }
+
     public function dashboardCounts(): array
     {
         return [

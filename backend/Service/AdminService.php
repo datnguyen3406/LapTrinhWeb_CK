@@ -157,7 +157,7 @@ final class AdminService
 
     public function sourceList(): array
     {
-        return ['items' => $this->content->sources(true)];
+        return ['items' => $this->content->sources(false)];
     }
 
     private static function publicUser(array $user): array
